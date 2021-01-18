@@ -2,7 +2,6 @@
 # this code opens a tar gzipped file and fro galprop and makes the relevant CR fluxes into a nice array
 #author Keith McBride, 2020-11
 
-###include shit###
 import numpy as np
 import pandas as pd
 # Set up matplotlib and use a nicer set of plot parameters
