@@ -2,7 +2,7 @@
 # Author: Keith McBride, Jan 2021
 # Run this to compare the AMS data and ALOT OF GALPROP models 
 # using the chi-square test statistic. 
-# The resulting output will be the B/C AMS data and the best fit model, as a function of rigidity. 
+# The resulting output will be the He-3/He-4 AMS data and the best fit model, as a function of rigidity. 
 # this file builds on the content of B_C_chi_square_test.py
 
 # Set up matplotlib and use a nicer set of plot parameters
@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 # Set up matplotlib and use a nicer set of plot parameters
 import matplotlib
-matplotlib.use('agg')
+matplotlib.use('agg')  # declare backend for plotting this OS
 matplotlib.rc('text', usetex=True)
 #matplotlib.rc_file("../../templates/matplotlibrc")
 import matplotlib.pyplot as plt 
@@ -25,15 +25,42 @@ from cosmic_ray_nuclei_index import rigidity_calc, undo_log_energy, log_energy
 from get_splines import *
 from get_residuals_chi_square import *
 from open_tarfile import get_fluxes_from_files
+
+#spline the galprop ratio so we can easily find the residuals
+def spline_the_ratio(energy,ratio,num_steps):
+    spl = splrep(energy,ratio)
+    energy_cont = np.linspace(2, 7, num_steps)
+    He_3_He_4_spline = splev(energy_cont, spl)
+    return energy_cont,He_3_He_4_spline 
+
+
 # Example function for testing this procedure before expanding to many ratios
 def run_chi_square_test(seq):
     # FIRST THE DATA
-    numerator='B'  # numerator of the nuclei ratio used in the chi_square calculation (needs to also be AMS_DATA file first character)
-    denominator='C'  # same as numerator but denominator for the nuclei ratio
+    #read in the ams data on helium
+ 
     path='/home/mcbride.342/galprop_sims/AMS_Data/Ratios/' # path for the AMS DATA files
-    df=read_in_data(numerator,denominator,path) #read in the AMS data for the given ratio as a pandas dataframe
-    rigidity,rigidity_binsize,ratio,ratio_errors=make_energies_and_errors(df,numerator,denominator)  # just have this function do cool stuff and give you a bunch of arrays   
-    print(f'Num data points in AMS data: {len(ratio)}')
+    file_name='he_3_4_ams_data.csv'  
+    ams=pd.read_csv(path+file_name)
+    #print(ams.head())
+    #join low and high together as one array to be used as x error bars
+    ams_energy=np.array((ams.EK_low.values,ams.Ek_high.values.T))
+    ams_energy=ams_energy*1000
+    ams_energy_mp=(ams_energy[0,:]+ams_energy[1,:])/2.0
+    # now make the error bar sizes (symmetric about these midpoints)
+    ams_energy_binsize=(ams_energy[1,:]-ams_energy[0,:])/2.0
+    #make the ratio an array
+    ams_ratio=np.array(ams._3He_over_4He.values * ams._factor_ratio.values)
+    ams_ratio_sys_erros=np.array(ams._sys_ratio.values * ams._factor_ratio)
+    ams_ratio_stat_erros=np.array(ams._stat_ratio.values * ams._factor_ratio)
+    ams_ratio_errors=np.sqrt(np.square(ams_ratio_stat_erros)+np.square(ams_ratio_sys_erros))
+    #ams_ratio_errors
+    print(f'ratio {ams_ratio}')
+    print(f'energy{ams_energy_mp}')
+    ams_energy_mp_1=np.log10(ams_energy_mp) # since the spline will be in log10 energy anyways
+    print(f'logged energy {ams_energy_mp_1}')
+    #return ams_energy_mp, ams_ratio, ams_energy_binsize, ams_ratio_errors
+
     #     IF YOU WANT TO PLOT JUST THE DATA (there is a different file for that though)
     #do you want y-axis log-scaled? (1=yes)
     #log_y=1
@@ -43,10 +70,10 @@ def run_chi_square_test(seq):
 
     # SECOND THE SIMULATION SETS
     # make arrays of the energy axis for all isotope fluxes (really kinetic energy)
-    # get energy axis and change to GeV (undo the logarithm to put in actual energy units)
+    # no need to change to regular energy (log)energy is fine. 
     energy=np.arange(2,9,0.304347391792257)
-    energy=undo_log_energy(energy)
-    energy=np.true_divide(energy,10**3)
+    #energy=undo_log_energy(energy)
+    #energy=np.true_divide(energy,10**3) # do not need GeV/n for He-3 and He-4
     print("ENERGY ARRAY: ")
     print(energy)
     # BIG LOOP TO GET ALL 400 models in sets of 20.
@@ -66,17 +93,19 @@ def run_chi_square_test(seq):
         chi_square_array_per_diffusion=[]
         while halo_model<20:
             # access the actual flux from the loaded simulation sets and then log them
-            logB10_flux=log_energy(fluxes_per_element_per_diffusion[halo_model][cosmic_ray_nuclei_index.element_index.index(cosmic_ray_nuclei_index.boron10_loc)])
-            logB11_flux=log_energy(fluxes_per_element_per_diffusion[halo_model][cosmic_ray_nuclei_index.element_index.index(cosmic_ray_nuclei_index.boron11_loc)])
-            logC12_flux=log_energy(fluxes_per_element_per_diffusion[halo_model][cosmic_ray_nuclei_index.element_index.index(cosmic_ray_nuclei_index.carbon12_loc)])
-            logC13_flux=log_energy(fluxes_per_element_per_diffusion[halo_model][cosmic_ray_nuclei_index.element_index.index(cosmic_ray_nuclei_index.carbon13_loc)])
-            # now call function that will spline all those fluxes and the energy axis to a common rigidity range among all the isotopes. 
-            rigC13_spline,B_C_ratio_spline=B_C_ratio(energy,logB10_flux,logB11_flux,logC12_flux,logC13_flux,num_steps)
-            ratios_splined_per_diffusion.append(B_C_ratio_spline)
+            # for He-3 and 4 this is should be to calc the ratio and then call splining functions
+
+            He_3_flux=fluxes_per_element_per_diffusion[halo_model][cosmic_ray_nuclei_index.element_index.index(cosmic_ray_nuclei_index.he3_loc)]
+            He_4_flux=fluxes_per_element_per_diffusion[halo_model][cosmic_ray_nuclei_index.element_index.index(cosmic_ray_nuclei_index.he4_loc)]
+            He_3_4_ratio=np.divide(He_3_flux,He_4_flux)
+            #print(f'ratio from sims {He_3_4_ratio}')
+            #spline the ratio with the energy
+            energy_spline,He_3_4_ratio_spline=spline_the_ratio(energy, He_3_4_ratio,num_steps)            
+            ratios_splined_per_diffusion.append(He_3_4_ratio_spline)
             # NOW CAN CALCULATE THE CHI-SQUARE and get residuals
-            residuals,chi_square=calculate_chi_square(rigidity,ratio,rigC13_spline, B_C_ratio_spline) 
+            residuals,chi_square=calculate_chi_square(ams_energy_mp_1,ams_ratio,energy_spline, He_3_4_ratio_spline) 
             #print(chi_square)
-            print(f'chi-square {chi_square}, from model {fluxes_per_element_per_diffusion[halo_model][-1]}')
+            #print(f'chi-square {chi_square}, from model {fluxes_per_element_per_diffusion[halo_model][-1]}')
             chi_square_array_per_diffusion.append(chi_square)
             chi_square_array_per_diffusion.append(fluxes_per_element_per_diffusion[halo_model][-1])
             halo_model+=1
@@ -115,7 +144,6 @@ def run_chi_square_test(seq):
     #print('{chi_square_array[0][0]})
     print("Saved file")
     return chi_square_array
-
 def format_chi_square(seq):
     chi_square_array=run_chi_square_test(1)
     print(type(chi_square_array))
@@ -196,10 +224,10 @@ def make_colormap(seq):
     ax.set_ylabel("Diffusion Coefficient "r'$10^{28}cm^{2}s^{-1}$', fontsize = 14)
     ax.set_xlabel("Halo Size (kpc)", fontsize = 14)
     #plt.tight_layout()
-    plt.title("Chi Square for B/C", y=1.08)
+    plt.title("Chi Square for He-3/He-4", y=1.08)
     print("about to save")
     #plt.savefig("heatmap_example_B_C_new_1.png",dpi=400)
-    plt.savefig("heatmap_example_B_C_final.png",dpi=400)
+    plt.savefig("heatmap_example_He_3_4_final.png",dpi=400)
 
 
-## NEW CODE FOR ADJUSTING THE VALUES OF CHISQUARE
+

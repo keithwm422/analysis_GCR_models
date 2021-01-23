@@ -72,6 +72,9 @@ def make_plot(seq):
     print(f'num columns: {len(chi_squares_full[0])}')
     #print(L)
     #print(D)
+    chi_squares_over_dof=chi_squares_full.copy()
+    num_points=67
+    chi_squares_over_dof=np.divide(chi_squares_over_dof,num_points-1)  # 67 data points in the B/C dataset
     L_values=np.arange(1,10,10)
     D_values=np.arange(1,20,20)
     font = {'family' : 'normal',
