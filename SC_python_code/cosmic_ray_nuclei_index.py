@@ -30,7 +30,7 @@ oxygen17_loc=24
 oxygen18_loc=25
 element_index=[sec_proton_loc,prim_proton_loc,deuterium_loc,he3_loc,he4_loc,li6_loc,li7_loc,be7_loc,be9_loc,be10_loc,
                boron10_loc,boron11_loc,carbon12_loc,carbon13_loc,oxygen16_loc,oxygen17_loc,oxygen18_loc]
-# Kinetic energy in GeV and charge+num_nucleons need to be integers
+# Kinetic energy in GeV/nucleon and charge+num_nucleons need to be integers
 def rigidity_calc(kin_energy, num_nucleons, charge):
     mass_P=0.938 # mass of a nucleon in GeV
     return (((kin_energy*num_nucleons)**(2)+2*(kin_energy*(num_nucleons**(2))*mass_P))**(0.5))/charge
