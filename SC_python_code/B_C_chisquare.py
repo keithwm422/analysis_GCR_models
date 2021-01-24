@@ -26,32 +26,30 @@ from get_splines import *
 from get_residuals_chi_square import *
 from open_tarfile import get_fluxes_from_files
 # Example function for testing this procedure before expanding to many ratios
-def run_chi_square_test(seq):
+def run_chi_square_test(seq,num_spline_steps):
     # FIRST THE DATA
     numerator='B'  # numerator of the nuclei ratio used in the chi_square calculation (needs to also be AMS_DATA file first character)
     denominator='C'  # same as numerator but denominator for the nuclei ratio
-    path='/home/mcbride.342/galprop_sims/AMS_Data/Ratios/' # path for the AMS DATA files
-    df=read_in_data(numerator,denominator,path) #read in the AMS data for the given ratio as a pandas dataframe
+    df=read_in_data(numerator,denominator) #read in the AMS data for the given ratio as a pandas dataframe
     rigidity,rigidity_binsize,ratio,ratio_errors=make_energies_and_errors(df,numerator,denominator)  # just have this function do cool stuff and give you a bunch of arrays   
     print(f'Num data points in AMS data: {len(ratio)}')
-    #     IF YOU WANT TO PLOT JUST THE DATA (there is a different file for that though)
+    #     IF YOU WANT TO PLOT JUST THE DATA run the code below  #
     #do you want y-axis log-scaled? (1=yes)
     #log_y=1
     #make_plot_of_data(numerator,denominator,rigidity,ratio,rigidity_binsize,ratio_errors,log_y)
     #print("success")
-    #     END PLOTTING THE DATA
-
+    #     END PLOTTING THE DATA    #
+    ################################
     # SECOND THE SIMULATION SETS
     # make arrays of the energy axis for all isotope fluxes (really kinetic energy)
     # get energy axis and change to GeV (undo the logarithm to put in actual energy units)
-    energy=np.arange(2,9,0.304347391792257)
-    energy=undo_log_energy(energy)
-    energy=np.true_divide(energy,10**3)
-    print("ENERGY ARRAY: ")
-    print(energy)
+    energy=np.arange(2,9,0.304347391792257) # construct the log energy array (these are just the powers of base 10) that matches galprop fits files
+    energy=undo_log_energy(energy) # undo the logarithm so now these are MeV/nucleon energies 
+    energy=np.true_divide(energy,10**3) # change to GeV/nucleon
+    #print(f'ENERGY ARRAY: {energy}')
     # BIG LOOP TO GET ALL 400 models in sets of 20.
     chi_square_array=[]
-    diffusion_number=1 #(set to 1 to 20)
+    diffusion_number=1 #(set to [1,20])
     while diffusion_number<21:
         chi_square_temp=[]  # reset this one at each iteration
         #first arg is not used currently for the following function (so it can be anything really)
@@ -61,7 +59,6 @@ def run_chi_square_test(seq):
         # the energy array is the same for all isotopes
         #need to pass the log fluxes found from the models above like so:
         halo_model=0 # halo size is weird, since it reads them in alphebatical order. model=0 is L=10, model=1 L=11, .. model=10 L=1, model=11 L=20, model=12 L=2 ... model=19 L=9 
-        num_steps=200 # number of points in the spline array when interpolating
         ratios_splined_per_diffusion=[]
         chi_square_array_per_diffusion=[]
         while halo_model<20:
@@ -71,7 +68,7 @@ def run_chi_square_test(seq):
             logC12_flux=log_energy(fluxes_per_element_per_diffusion[halo_model][cosmic_ray_nuclei_index.element_index.index(cosmic_ray_nuclei_index.carbon12_loc)])
             logC13_flux=log_energy(fluxes_per_element_per_diffusion[halo_model][cosmic_ray_nuclei_index.element_index.index(cosmic_ray_nuclei_index.carbon13_loc)])
             # now call function that will spline all those fluxes and the energy axis to a common rigidity range among all the isotopes. 
-            rigC13_spline,B_C_ratio_spline=B_C_ratio(energy,logB10_flux,logB11_flux,logC12_flux,logC13_flux,num_steps)
+            rigC13_spline,B_C_ratio_spline=B_C_ratio(energy,logB10_flux,logB11_flux,logC12_flux,logC13_flux,num_spline_steps)
             ratios_splined_per_diffusion.append(B_C_ratio_spline)
             # NOW CAN CALCULATE THE CHI-SQUARE and get residuals
             residuals,chi_square=calculate_chi_square(rigidity,ratio,rigC13_spline, B_C_ratio_spline) 
@@ -82,7 +79,6 @@ def run_chi_square_test(seq):
             halo_model+=1
         chi_square_array.append(chi_square_array_per_diffusion)
         diffusion_number+=1
-    
     # plot the model chosen and the AMS data
     #plt.figure(figsize=(12,12))
     #fnt=14
@@ -116,8 +112,8 @@ def run_chi_square_test(seq):
     print("Saved file")
     return chi_square_array
 
-def format_chi_square(seq):
-    chi_square_array=run_chi_square_test(1)
+def format_chi_square(seq, num_spline_steps):
+    chi_square_array=run_chi_square_test(1,num_spline_steps)
     print(type(chi_square_array))
     print(f'chi square array num rows {len(chi_square_array)}')
     print(f'chi square array num columns {len(chi_square_array[0])}')
@@ -137,12 +133,12 @@ def format_chi_square(seq):
                 L_D_values=chi_square_array[diffusion_iter][iter].split("_")
                 #print(L_D_values)
                 L.append(int(L_D_values[-3]))
-                D.append(int(L_D_values[-1])) 
+                D.append(int(L_D_values[-1]))
             iter+=1
         # don't append the values since they are out of order. Instead, readjust them into the right order
         j=0
         temp=chi_squares.copy()
-        print(f'j={j} and temp before adjustments {temp}')
+        #print(f'j={j} and temp before adjustments {temp}')
         while j<len(chi_squares):
             if j<=9: #this is L=10 so set it 9th position in array, j==1 L=11 set it to 10 pos in array... j==9 L=19 set it to 18 pos in array
                 temp[j+9]=chi_squares[j]
@@ -156,9 +152,9 @@ def format_chi_square(seq):
             elif j>=12:  # these are j>=12 where j==12 is L=2 so set to 1 pos in array, j==13 set it 2 in array
                 temp[j-11]=chi_squares[j]
                 #print(f'j={j} and j should be geq 12')
-                #print(f'j-11={j-11} and temp should be {chi_squares[j]} but temp is {temp[j-11]}')                
-            j+=1        
-        print(f'j={j} and temp before adjustments {temp}')
+                #print(f'j-11={j-11} and temp should be {chi_squares[j]} but temp is {temp[j-11]}')
+            j+=1
+        #print(f'j={j} and temp before adjustments {temp}')
         chi_squares_full.append(temp)
         diffusion_iter+=1
     # now for each column in chi_square_full, need to readjust the halo models so they match up accurately
@@ -170,7 +166,8 @@ def format_chi_square(seq):
     return chi_squares_full
 
 def make_colormap(seq):
-    chi_squares_full=format_chi_square(1)        
+    num_spline_steps=2000
+    chi_squares_full=format_chi_square(1,num_spline_steps)
     print(f'chi square full num rows {len(chi_squares_full)}')
     print(f'chi square full num columns {len(chi_squares_full[0])}')
     L_values=np.arange(1,20,20)
@@ -199,7 +196,7 @@ def make_colormap(seq):
     plt.title("Chi Square for B/C", y=1.08)
     print("about to save")
     #plt.savefig("heatmap_example_B_C_new_1.png",dpi=400)
-    plt.savefig("heatmap_example_B_C_final.png",dpi=400)
+    plt.savefig(filepaths.images_path+'heatmap_example_B_C.png',dpi=400)
 
 
 ## NEW CODE FOR ADJUSTING THE VALUES OF CHISQUARE
