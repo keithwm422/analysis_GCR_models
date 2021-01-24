@@ -35,9 +35,9 @@ def run_chi_square_test(seq,num_spline_steps):
     print(f'Num data points in AMS data: {len(ratio)}')
     #     IF YOU WANT TO PLOT JUST THE DATA run the code below  #
     #do you want y-axis log-scaled? (1=yes)
-    #log_y=1
-    #make_plot_of_data(numerator,denominator,rigidity,ratio,rigidity_binsize,ratio_errors,log_y)
-    #print("success")
+    log_y=0
+    make_plot_of_data(numerator,denominator,rigidity,ratio,rigidity_binsize,ratio_errors,log_y)
+    print("success")
     #     END PLOTTING THE DATA    #
     ################################
     # SECOND THE SIMULATION SETS
@@ -79,6 +79,7 @@ def run_chi_square_test(seq,num_spline_steps):
             halo_model+=1
         chi_square_array.append(chi_square_array_per_diffusion)
         diffusion_number+=1
+        print(f'{100*(diffusion_number-1)/20}% of diffusion sets used') 
     # plot the model chosen and the AMS data
     #plt.figure(figsize=(12,12))
     #fnt=14

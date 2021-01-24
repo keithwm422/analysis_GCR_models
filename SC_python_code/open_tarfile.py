@@ -94,7 +94,7 @@ def get_fluxes_from_files(seq, diff_number):
         names.append(tar.getmembers()[j].name)
         fluxes_per_element_full.append(fluxes_per_element_per_fits_file)
         k+=1
-        print(f'{k/len(list_found)}% loaded')
+        print(f'{100*k/len(list_found)}% loaded')
     tar.close()
     print(f'Loaded the following FITS file fluxes into an array')
     for k in range(len(list_found)) : print(fluxes_per_element_full[k][-1])
