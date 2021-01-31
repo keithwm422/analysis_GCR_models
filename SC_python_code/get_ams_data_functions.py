@@ -67,7 +67,7 @@ def load_pbarp_ams_ratio():
 def load_Be10_Be9_ratio():
 # lets try saving the fluxes per element as a dataframe?
     extension='.csv'
-    read_file=path+'Be10_Be9_all'+extension
+    read_file=filespath.data_path+'Be10_Be9_all'+extension
     multi_exp_df=pd.read_csv(read_file)
     print(multi_exp_df.head())
     column_names=['experiment','kinetic','kinetic_binsize','ratio','ratio_errors']
@@ -126,7 +126,7 @@ def make_plot_of_Beisotope_data(df,numerator,denominator,log_show):
     #plt.ylim([y1,y2])
     plt.legend(loc='lower right', fontsize=fnt-10)
     plt.title("Example ", fontsize=fnt)
-    plt.savefig(numerator+"_"+denominator+"_all_data.png")
+    plt.savefig(filepaths.images_path+numerator+"_"+denominator+"_all_data.png")
     #don't show on supercomputer
     #plt.show()
 
@@ -208,6 +208,27 @@ def make_plot_of_Hisotope_data(df,numerator,denominator,log_show):
     #plt.ylim([y1,y2])
     plt.legend(loc='lower right', fontsize=fnt-10)
     plt.title("Example ", fontsize=fnt)
-    plt.savefig(numerator+"_"+denominator+"_all_data.png")
+    plt.savefig(filepaths.images_path+numerator+"_"+denominator+"_all_data.png")
     #don't show on supercomputer
     #plt.show()
+
+
+def load_He3_He4_ratio():
+    file_name=filepaths.data_path+'he_3_4_ams_data.csv'  
+    ams=pd.read_csv(path+file_name)
+    #print(ams.head())
+    #join low and high together as one array to be used as x error bars
+    kinetic=np.array((ams.EK_low.values,ams.Ek_high.values.T))
+    kinetic=ams_energy*1000
+    kinetic_mp=(kinetic[0,:]+kinetic[1,:])/2.0
+    # now make the error bar sizes (symmetric about these midpoints)
+    kinetic_binsize=(kinetic[1,:]-kinetic[0,:])/2.0
+    #make the ratio an array
+    ratio=np.array(ams._3He_over_4He.values * ams._factor_ratio.values)
+    ratio_sys_erros=np.array(ams._sys_ratio.values * ams._factor_ratio)
+    ratio_stat_erros=np.array(ams._stat_ratio.values * ams._factor_ratio)
+    ratio_errors=np.sqrt(np.square(ratio_stat_erros)+np.square(ratio_sys_erros))
+    column_names=['kinetic','kinetic_binsize','ratio','ratio_errors']
+    ams_data_formatted_df = pd.DataFrame(data=np.column_stack((kinetic_mp,kinetic_binsize,ratio,ratio_errors)),
+                   columns=column_names)
+    return ams_data_formatted_df
