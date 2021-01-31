@@ -44,7 +44,7 @@ def load_ams_ratios(numerator,denominator):
 
 def load_pbarp_ams_ratio():
 # lets try saving the fluxes per element as a dataframe?
-    df=read_in_data('p_bar','p_ratio',path)
+    df=read_in_data('p_bar','p_ratio')
     column_names=['rigidity','rigidity_binsize','ratio','ratio_errors']
     rigidity=np.array((df.R_low.values,df.R_high.values.T))
     rigidity_mp=(rigidity[0,:]+rigidity[1,:])/2.0
@@ -67,9 +67,9 @@ def load_pbarp_ams_ratio():
 def load_Be10_Be9_ratio():
 # lets try saving the fluxes per element as a dataframe?
     extension='.csv'
-    read_file=filespath.data_path+'Be10_Be9_all'+extension
+    read_file=filepaths.data_path+'Be10_Be9_all'+extension
     multi_exp_df=pd.read_csv(read_file)
-    print(multi_exp_df.head())
+    #print(multi_exp_df.head())
     column_names=['experiment','kinetic','kinetic_binsize','ratio','ratio_errors']
     names=multi_exp_df._experiment.values
     kinetic=np.array((multi_exp_df.EK_low.values,multi_exp_df.EK_high.values.T))
@@ -80,9 +80,9 @@ def load_Be10_Be9_ratio():
     ratio_sys_errors=np.array(multi_exp_df._sys_plus.values)
     ratio_stat_errors=np.array(multi_exp_df._stat_plus.values)
     ratio_errors=np.sqrt(np.square(ratio_stat_errors)+np.square(ratio_sys_errors))
-    print(kinetic_mp.shape)
-    print(ratio.shape)
-    print(ratio_errors.shape)
+    #print(kinetic_mp.shape)
+    #print(ratio.shape)
+    #print(ratio_errors.shape)
     ams_data_formatted_df = pd.DataFrame(data=np.column_stack((names,kinetic_mp,kinetic_binsize,ratio,ratio_errors)),
                    columns=column_names)
     return ams_data_formatted_df
@@ -102,15 +102,15 @@ def make_plot_of_Beisotope_data(df,numerator,denominator,log_show):
         if (i<=1) or ((i>6) and i<10):
             l=exp_names[i]
             label_string=l[:l.find('(')]
-            print(label_string)
+            #print(label_string)
             plt.errorbar(df.loc[df.experiment==l,'kinetic'],df.loc[df.experiment==l,'ratio'],
                 xerr=df.loc[df.experiment==l,'kinetic_binsize'],yerr=df.loc[df.experiment==l,'ratio_errors'],
                          marker=type_points[i],ms=markersize_flt,label=label_string)
         elif i>=10:
             l=exp_names[i]
-            print(l)
+            #print(l)
             label_string=l[:l.find('1')]
-            print(label_string)
+            #print(label_string)
             plt.errorbar(df.loc[df.experiment==l,'kinetic'],df.loc[df.experiment==l,'ratio'],
                 xerr=df.loc[df.experiment==l,'kinetic_binsize'],yerr=df.loc[df.experiment==l,'ratio_errors'],
                          marker=type_points[i],ms=markersize_flt,label=label_string)
@@ -157,9 +157,9 @@ def make_plot_of_data(df,numerator,denominator,log_show):
 def load_H2_H1_ratio():
 # lets try saving the fluxes per element as a dataframe?
     extension='.csv'
-    read_file=path+'H2_H1_pamela_voyager_data'+extension
+    read_file=filepaths.data_path+'H2_H1_pamela_voyager_data'+extension
     multi_exp_df=pd.read_csv(read_file)
-    print(multi_exp_df.head())
+    #print(multi_exp_df.head())
     column_names=['experiment','kinetic','kinetic_binsize','ratio','ratio_errors']
     names=multi_exp_df._experiment.values
     kinetic=np.array((multi_exp_df.EK_low.values,multi_exp_df.EK_high.values.T))
@@ -170,9 +170,9 @@ def load_H2_H1_ratio():
     ratio_sys_errors=np.array(multi_exp_df._sys_plus.values)
     ratio_stat_errors=np.array(multi_exp_df._stat_plus.values)
     ratio_errors=np.sqrt(np.square(ratio_stat_errors)+np.square(ratio_sys_errors))
-    print(kinetic_mp.shape)
-    print(ratio.shape)
-    print(ratio_errors.shape)
+    #print(kinetic_mp.shape)
+    #print(ratio.shape)
+    #print(ratio_errors.shape)
     ams_data_formatted_df = pd.DataFrame(data=np.column_stack((names,kinetic_mp,kinetic_binsize,ratio,ratio_errors)),
                    columns=column_names)
     return ams_data_formatted_df
@@ -215,11 +215,11 @@ def make_plot_of_Hisotope_data(df,numerator,denominator,log_show):
 
 def load_He3_He4_ratio():
     file_name=filepaths.data_path+'he_3_4_ams_data.csv'  
-    ams=pd.read_csv(path+file_name)
+    ams=pd.read_csv(file_name)
     #print(ams.head())
     #join low and high together as one array to be used as x error bars
     kinetic=np.array((ams.EK_low.values,ams.Ek_high.values.T))
-    kinetic=ams_energy*1000
+    #kinetic=kinetic*1000
     kinetic_mp=(kinetic[0,:]+kinetic[1,:])/2.0
     # now make the error bar sizes (symmetric about these midpoints)
     kinetic_binsize=(kinetic[1,:]-kinetic[0,:])/2.0
