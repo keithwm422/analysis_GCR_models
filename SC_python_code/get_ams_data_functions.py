@@ -201,4 +201,13 @@ def make_plot_of_Hisotope_data(df,numerator,denominator,log_show):
     plt.xlabel("Kinetic Energy per nucleon [GeV/n]",fontsize=fnt)
     plt.xticks(fontsize=fnt-4)
     if log_show==1:
-
+        plt.yscale("log")
+    plt.ylabel("Flux division "+numerator+"/"+denominator,fontsize=fnt)
+    plt.yticks(fontsize=fnt-4)
+    plt.xlim([x1,x2])
+    #plt.ylim([y1,y2])
+    plt.legend(loc='lower right', fontsize=fnt-10)
+    plt.title("Example ", fontsize=fnt)
+    plt.savefig(numerator+"_"+denominator+"_all_data.png")
+    #don't show on supercomputer
+    #plt.show()
