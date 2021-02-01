@@ -94,8 +94,8 @@ def make_plot_of_Beisotope_data(df,numerator,denominator,log_show):
     #y1=ratio[0]
     #y2=5*10**-1
     plt.figure(figsize=(16,16))
-    exp_names=multi_exp_be10_be9.experiment.unique()
-    type_points=['.', 'P', 'p', 'o', '^', '*','<','>','v','h','d','s']
+    exp_names=df.experiment.unique()
+    type_points=['X', 'P', 'p', 'o', '^', '*','<','>','v','h','d','s']
     markersize_flt=14
     i=0
     while i<len(exp_names):
@@ -105,7 +105,7 @@ def make_plot_of_Beisotope_data(df,numerator,denominator,log_show):
             #print(label_string)
             plt.errorbar(df.loc[df.experiment==l,'kinetic'],df.loc[df.experiment==l,'ratio'],
                 xerr=df.loc[df.experiment==l,'kinetic_binsize'],yerr=df.loc[df.experiment==l,'ratio_errors'],
-                         marker=type_points[i],ms=markersize_flt,label=label_string)
+                         marker=type_points[i],ms=markersize_flt,linestyle='None',label=label_string)
         elif i>=10:
             l=exp_names[i]
             #print(l)
@@ -113,7 +113,7 @@ def make_plot_of_Beisotope_data(df,numerator,denominator,log_show):
             #print(label_string)
             plt.errorbar(df.loc[df.experiment==l,'kinetic'],df.loc[df.experiment==l,'ratio'],
                 xerr=df.loc[df.experiment==l,'kinetic_binsize'],yerr=df.loc[df.experiment==l,'ratio_errors'],
-                         marker=type_points[i],ms=markersize_flt,label=label_string)
+                         marker=type_points[i],ms=markersize_flt,linestyle='None',label=label_string)
         i+=1
     plt.xscale("log")
     plt.xlabel("Kinetic Energy per nucleon [GeV/n]",fontsize=fnt)
@@ -195,7 +195,7 @@ def make_plot_of_Hisotope_data(df,numerator,denominator,log_show):
         print(label_string)
         plt.errorbar(df.loc[df.experiment==l,'kinetic'],df.loc[df.experiment==l,'ratio'],
             xerr=df.loc[df.experiment==l,'kinetic_binsize'],yerr=df.loc[df.experiment==l,'ratio_errors'],
-                    marker=type_points[i],ms=markersize_flt,label=label_string)
+                    marker=type_points[i],ms=markersize_flt,linestyle='None',label=label_string)
         i+=1
     plt.xscale("log")
     plt.xlabel("Kinetic Energy per nucleon [GeV/n]",fontsize=fnt)
@@ -232,3 +232,80 @@ def load_He3_He4_ratio():
     ams_data_formatted_df = pd.DataFrame(data=np.column_stack((kinetic_mp,kinetic_binsize,ratio,ratio_errors)),
                    columns=column_names)
     return ams_data_formatted_df
+
+
+### Plot the data and save to filepaths declared directory ###
+def make_plot_of_Heisotope_data(df,numerator,denominator,log_show):
+    fnt=20
+    xmin=df.kinetic.min()
+    x1=0.95*xmin
+    xmax=df.kinetic.max()
+    x2=1.05*xmax
+    #y1=ratio[0]
+    #y2=5*10**-1
+    plt.figure(figsize=(10,10))
+    plt.errorbar(df.kinetic.values,df.ratio.values,xerr=df.kinetic_binsize.values,yerr=df.ratio_errors.values,fmt='o',label="AMS")
+    plt.xscale("log")
+    plt.xlabel("Kinetic Energy per nucleon [GeV/n]",fontsize=fnt)
+    plt.xticks(fontsize=fnt-4)
+    if log_show==1:
+        plt.yscale("log")
+    plt.ylabel("Flux division "+numerator+"/"+denominator,fontsize=fnt)
+    plt.yticks(fontsize=fnt-4)
+    plt.xlim([x1,x2])
+    #plt.ylim([y1,y2])
+    #plt.legend(loc='lower right', fontsize=fnt-4)
+    plt.title("Example", fontsize=fnt)
+    plt.savefig(filepaths.images_path+numerator+"_"+denominator+"_exp_data.png")
+    #don't show on supercomputer
+    #plt.show()
+
+def load_B_C_ratio_voyager():
+# lets try saving the fluxes per element as a dataframe?
+    extension='.csv'
+    read_file=filepaths.data_path+'B_C_test_unmodulated_voyager_ams'+extension
+    multi_exp_df=pd.read_csv(read_file)
+    #print(multi_exp_df.head())
+    column_names=['experiment','kinetic','kinetic_binsize','ratio','ratio_errors']
+    # get just the voyager1- B_C ratio data.
+    names=multi_exp_df[multi_exp_df['_experiment'].str.contains("Voyager1-")]._experiment.values
+    kinetic=np.array((multi_exp_df[multi_exp_df['_experiment'].str.contains("Voyager1-")].EK_low.values,multi_exp_df[multi_exp_df['_experiment'].str.contains("Voyager1-")].EK_high.values.T))
+    kinetic_mp=multi_exp_df[multi_exp_df['_experiment'].str.contains("Voyager1-")].EK_mid.values
+    kinetic_binsize=(kinetic[1,:]-kinetic[0,:])/2.0
+    ratio_name='_B'+'_'+'C_ratio'
+    ratio=np.array(multi_exp_df[multi_exp_df['_experiment'].str.contains("Voyager1-")][ratio_name].values)
+    ratio_sys_errors=np.array(multi_exp_df[multi_exp_df['_experiment'].str.contains("Voyager1-")]._sys_plus.values)
+    ratio_stat_errors=np.array(multi_exp_df[multi_exp_df['_experiment'].str.contains("Voyager1-")]._stat_plus.values)
+    ratio_errors=np.sqrt(np.square(ratio_stat_errors)+np.square(ratio_sys_errors))
+    #print(kinetic_mp.shape)
+    #print(ratio.shape)
+    #print(ratio_errors.shape)
+    ams_data_formatted_df = pd.DataFrame(data=np.column_stack((names,kinetic_mp,kinetic_binsize,ratio,ratio_errors)),
+                   columns=column_names)
+    return ams_data_formatted_df
+
+### Plot the data and save to filepaths declared directory ###
+def make_plot_of_B_C_voyager_data(df,numerator,denominator,log_show):
+    fnt=20
+    xmin=df.kinetic.min()
+    x1=0.95*xmin
+    xmax=df.kinetic.max()
+    x2=1.05*xmax
+    #y1=ratio[0]
+    #y2=5*10**-1
+    plt.figure(figsize=(10,10))
+    plt.errorbar(df.kinetic.values,df.ratio.values,xerr=df.kinetic_binsize.values,yerr=df.ratio_errors.values,fmt='o',label="Voyager")
+    plt.xscale("log")
+    plt.xlabel("Kinetic Energy per nucleon [GeV/n]",fontsize=fnt)
+    plt.xticks(fontsize=fnt-4)
+    if log_show==1:
+        plt.yscale("log")
+    plt.ylabel("Flux division "+numerator+"/"+denominator,fontsize=fnt)
+    plt.yticks(fontsize=fnt-4)
+    plt.xlim([x1,x2])
+    #plt.ylim([y1,y2])
+    #plt.legend(loc='lower right', fontsize=fnt-4)
+    plt.title("Example", fontsize=fnt)
+    plt.savefig(filepaths.images_path+numerator+"_"+denominator+"_voyager_data.png")
+    #don't show on supercomputer
+    #plt.show()
