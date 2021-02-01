@@ -27,12 +27,12 @@ from get_residuals_chi_square import *
 from open_tarfile import get_fluxes_from_files
 # Example function for testing this procedure before expanding to many ratios
 def run_chi_square_test(seq,num_spline_steps,cutoff):
-    # FIRST THE DATA
+    ############ FIRST THE DATA
     MAX_DIFFUSION=20
     numerator='B'  # numerator of the nuclei ratio used in the chi_square calculation (needs to also be AMS_DATA file first character)
     denominator='C'  # same as numerator but denominator for the nuclei ratio
     #num=BORON
-    B_C_df=load_ams_ratios('B','C') # one for eahc ratio that we want to compare to the galprop models
+    B_C_df=load_ams_ratios('B','C') # one for each ratio that we want to compare to the galprop models
     B_O_df=load_ams_ratios('B','O')
     #num=Be
     Be_B_df=load_ams_ratios('Be','B')
@@ -42,27 +42,38 @@ def run_chi_square_test(seq,num_spline_steps,cutoff):
     Li_B_df=load_ams_ratios('Li','B')
     Li_C_df=load_ams_ratios('Li','C')
     Li_O_df=load_ams_ratios('Li','O')
-
-    #B_C_df=read_in_data(numerator,denominator) #read in the AMS data for the given ratio as a pandas dataframe
-    #rigidity,rigidity_binsize,ratio,ratio_errors=make_energies_and_errors(df,numerator,denominator)  # just have this function do cool stuff and give you a bunch of arrays   
-    print(f'Num data points in AMS data: {len(ratio)}')
+    ####OTHER DATA (NOT AMS)
+    #pbar_p_df=load_pbarp_ams_ratio()
+    Be10_Be9_df=load_Be10_Be9_ratio()
+    H2_H1_df=load_H2_H1_ratio()
+    He3_He4_ratio=load_He3_He4_ratio()
+    B_C_voyager_df=load_B_C_ratio_voyager()
+    ############### DATA LOADED
+    ### two x axis values occur:
+    ### FOR NUCLEI RATIOS (EXCEPT VOYAGER) : Rigidity [GV]
+    ### FOR ISOTOPE RATIOS (AND B/C-VOYAGER) : Kinetic Energy [GeV/n]
+    ### ALL y axis values are ratios (no intensities or fluxes)
+    ###############
+    #print(f'Num data points in AMS data: {len(ratio)}')
     #     IF YOU WANT TO PLOT JUST THE DATA run the code below  #
     #do you want y-axis log-scaled? (1=yes)
     #log_y=1
-    make_plot_of_data(B_C_df,numerator,denominator,log_y)
-    #print("success")
+    #make_plot_of_data(B_C_df,'B','C',log_y)
+    #make_plot_of_B_C_voyager_data(B_C_voyager_df,'B','C',log_show)
+    # look at get_ams_data_functions for more plotting functions
+    print("success, data loaded")
     #     END PLOTTING THE DATA    #
     ################################
     # SECOND THE SIMULATION SETS
-    # make arrays of the energy axis for all isotope fluxes (really kinetic energy)
-    # get energy axis and change to GeV (undo the logarithm to put in actual energy units)
+    # make arrays of the energy axis for all isotope fluxes (GALPROP states kinetic energy [MeV/n] as FITS file energy axis)
+    # get energy axis and change to GeV (undo the logarithm to put in actual energy units) # this is done step by step to make it SUPER transparent. 
     energy=np.arange(2,9,0.304347391792257) # construct the log energy array (these are just the powers of base 10) that matches galprop fits files
     energy=undo_log_energy(energy) # undo the logarithm so now these are MeV/nucleon energies 
-    energy=np.true_divide(energy,10**3) # change to GeV/nucleon
+    energy=np.true_divide(energy,10**3) # change to GeV/nucleon because
     #print(f'ENERGY ARRAY: {energy}')
-    # BIG LOOP TO GET ALL 400 models in sets of 20.
-    chi_square_array=[]
-    chi_square_nparray=np.empty([20,20])
+    # BIG LOOP TO GET ALL 400 models in sets of 20 (constant diffusion coefficient but varying halo size).
+    chi_square_array=[] # in the end this is a list of the models that is arbitrary dimensional
+    chi_square_nparray=np.empty([20,20]) # this is what we expect the chi_square_array to be if all goes well, where each value is the chi_square on a grid of halo size vs diffusion coeff
     model_name_full=np.empty([20,20],dtype="S10")
     stats_full=np.empty([20,20,2]) # the stats object is a scipy chiqsuare object which has two components a chisquare and a pvalue
     stats_masked_full=np.empty([20,20,2]) # the stats object is a scipy chiqsuare object which has two components a chisquare and a pvalue
@@ -71,7 +82,7 @@ def run_chi_square_test(seq,num_spline_steps,cutoff):
         chi_square_temp=[]  # reset this one at each iteration
         #first arg is not used currently for the following function (so it can be anything really)
         fluxes_per_element_per_diffusion=get_fluxes_from_files(1, diffusion_number)  # to store the loaded fluxes from GALPROP sims
-        # ALL DATA AND FLUXES HAVE BEEN LOADED
+        # ALL DATA AND FLUXES HAVE BEEN LOADED in the fluxes_per_element_per_diffusion array
         # ADJUST UNITS OF THE SIMULATION ARRAYS
         # the energy array is the same for all isotopes
         #need to pass the log fluxes found from the models above like so:
@@ -82,7 +93,9 @@ def run_chi_square_test(seq,num_spline_steps,cutoff):
         stats_per_diffusion=np.empty([20,2]) # the stats object is a scipy chiqsuare object which has two components a chisquare and a pvalue
         stats_masked_per_diffusion=np.empty([20,2]) # the stats object is a scipy chiqsuare object which has two components a chisquare and a pvalue
         while halo_model<20:
-            # access the actual flux from the loaded simulation sets and then log them
+            # access the actual flux from all the isotopes from the loaded simulation sets and then log them
+            # 
+            
             logB10_flux=log_energy(fluxes_per_element_per_diffusion[halo_model][cosmic_ray_nuclei_index.element_index.index(cosmic_ray_nuclei_index.boron10_loc)])
             logB11_flux=log_energy(fluxes_per_element_per_diffusion[halo_model][cosmic_ray_nuclei_index.element_index.index(cosmic_ray_nuclei_index.boron11_loc)])
             logC12_flux=log_energy(fluxes_per_element_per_diffusion[halo_model][cosmic_ray_nuclei_index.element_index.index(cosmic_ray_nuclei_index.carbon12_loc)])
