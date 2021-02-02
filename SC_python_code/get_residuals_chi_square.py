@@ -6,19 +6,16 @@
 
 import numpy as np
 from scipy.stats import chisquare
-#now make functions to get residuals
+from scipy.stats import chi2
 # to calculate residuals 
-#find the elements of the spline energy array closest to the ams energy value:
-# for every data point so len(data_y)
-# add ability to impost cutoff (calculate above certain rigidity or kinetic energy per nucleon)
-# Return alot of stuff in case its needed for plotting
-def calculate_chi_square(data_x,data_y,model_x,model_y,cutoff):
+# residuals of y data from model evaluated at x values (finds closest values)
+# actually returns the residuals, splined-x values closest to data points and splined-y values at those x values
+def calculate_residuals(data_x,data_y,model_x, model_y):
     i=0
     closest_x_value=[]
-    closest_x_index=[]
+    #closest_x_index=[]
     residual=[]
     expected_values=[]
-    residual_masked=[]
     while i<len(data_y):
         # no matter what, find the closest rigidity value in the spline.
         array=model_x.copy()
@@ -26,30 +23,26 @@ def calculate_chi_square(data_x,data_y,model_x,model_y,cutoff):
         absolute_val_array = np.abs(array - value)
         smallest_difference_index = absolute_val_array.argmin()
         closest_x_value.append(array[smallest_difference_index]) # the actual model x-axis value near the data x-axis point
-        closest_x_index.append(smallest_difference_index)
+        #closest_x_index.append(smallest_difference_index)
         residual.append(data_y[i]-model_y[smallest_difference_index])
         expected_values.append(model_y[smallest_difference_index]) # the actual model y-axis value near the data x-axis point
         i+=1
-    #with residuals and these values (indices) calculate the total chi_square
-    #make square residuals
-    sq_res=np.square(residual)
-    sq_res_div=np.true_divide(sq_res,expected_values)
-    stats_obj=chisquare(f_obs=data_y, f_exp=expected_values)
-    #find the rigidity bin that starts the cutoff
-    #masking arrays correctly
-    # make them into numpy arrays
-    closest_x_value=np.array(closest_x_value)
-    expected_values=np.array(expected_values)
-    #find the values allowed after the masking
-    model_x_values_allowed=closest_x_value>=cutoff
-    closest_x_masked=closest_x_value[model_x_values_allowed]
-    expected_values_masked=expected_values[model_x_values_allowed]
-    data_x_allowed=data_x>=cutoff
-    data_x_masked=data_x[data_x_allowed]
-    data_y_masked=data_y[data_x_allowed]
-    # now calculate new statistics
-    stats_obj_masked=chisquare(f_obs=data_y_masked, f_exp=expected_values_masked)
-
-    return residual,np.sum(sq_res_div),stats_obj,stats_obj_masked,data_x_masked,data_y_masked,closest_x_value,expected_values,closest_x_masked,expected_values_masked
-
+    return np.array(residual),np.array(closest_x_value),np.array(expected_values)
+# Once residual is known, use this with y-errors (and pass number of fit parameters in degrees of freedom)
+# calls the residuals and calculates the reduced chi-square (based on integer params) and its pvalue from the SF of the distribution. 
+def calculate_reduced_chi_square(data_x,data_y,model_x,model_y,data_error,params):
+    residual,x_expected,y_expected=calculate_residuals(data_x,data_y,model_x,model_y)
+    degrees_of_freedom=len(residual)-params # 2 is the L and D (parameters trying to fit?)
+    #print(len(residuals))
+    chi_reduced=np.sum(np.true_divide(np.square(residual),np.square(data_error)))/degrees_of_freedom
+    p_value=chi2.sf(chi_reduced,degrees_of_freedom) # calculates a p-value for the ch-square reduced based on number of degrees of freedom (data size-parameters to fit)    
+    return chi_reduced, p_value
+# Once residual is known, use this with y-errors (and pass number of fit parameters in degrees of freedom)
+# calls the residuals and calculates the regular chi-square (based on data size) and its pvalue from the scipy package 
+def calculate_chi_square(data_x,data_y,model_x,model_y,cutoff):
+    residual,x_expected,y_expected=calculate_residuals(data_x,data_y,model_x,model_y)
+    degrees_of_freedom=len(residual)-1 # 1 less than data 
+    #print(len(residuals))
+    stats_obj=chisquare(f_obs=data_y, f_exp=y_expected)    
+    return stats_obj
 
