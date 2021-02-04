@@ -138,41 +138,41 @@ def run_chi_square_test(seq,num_spline_steps,cutoff):
             # these interpolations are at a very fine level, num_spline steps, which are in log-space of the energy and are evenly spaced. 
             # the return arrays are not logged anymore and are either rigidity or kinetic energy/nucleon. The ratios are not logged.
             # NOW CAN CALCULATE THE CHI-SQUARE and get residuals
-            chi_reduced,p_reduced=calculate_reduced_chi_square(B_C_df.rigidity.values,B_C_df.ratio.values,rigC13_spline,B_C_ratio_spline,B_C_df.ratio_errors.values,2)
+            chi_square,p_value=calculate_chi_square(B_C_df.rigidity.values,B_C_df.ratio.values,rigC13_spline,B_C_ratio_spline,B_C_df.ratio_errors.values,cutoff) # last arg is cutoff
             # if there is a cutoff in rigidity (use data at this value and above), then use the following
             #residuals,chi_square,stats_obj,stats_obj_masked,rigidity_masked,ratio_masked,model_x,model_y,model_x_masked,model_y_masked=calculate_chi_square(rigidity,ratio,rigC13_spline, B_C_ratio_spline,cutoff)
             # these quantities need to be saved into huge arrays, but also apply the formatting inline here
             # formatting is that the loaded files are done in alphabetical order, so the numbers are not in the correct order. 
             # the print statement below shows that the first model read in is L=10, L=11, ... L=19 then L=1, L=20, then L=2, L=3....L=9
-            print(f'chi-square {chi_reduced}, from model {fluxes_per_element_per_diffusion[halo_model][-1]}')
+            print(f'chi-square {chi_square}, from model {fluxes_per_element_per_diffusion[halo_model][-1]}')
             if halo_model<=9: #this is L=10 so set it 9th position in array, ==1 L=11 set it to 10 pos in array... j==9 L=19 set it to 18 pos in array
-                #chi_square_array_per_diffusion[halo_model+9]=chi_square
-                chi_square_array_per_diffusion[halo_model+9]=chi_reduced
-                pvalue_array_per_diffusion[halo_model+9]=p_reduced
+                chi_square_array_per_diffusion[halo_model+9]=chi_square
+                #chi_square_array_per_diffusion[halo_model+9]=chi_reduced
+                pvalue_array_per_diffusion[halo_model+9]=p_value
                 model_name[halo_model+9]=fluxes_per_element_per_diffusion[halo_model][-1]
                 #ratios_splined_per_diffusion[halo_model+9]=B_C_ratio_spline
                 #stats_per_diffusion[halo_model+9]=stats_obj
                 #stats_masked_per_diffusion[halo_model+9]=stats_obj_masked
             elif halo_model==10: # this is L=1 so set it to zeroth pos
-                #chi_square_array_per_diffusion[0]=chi_square
-                chi_square_array_per_diffusion[0]=chi_reduced
-                pvalue_array_per_diffusion[0]=p_reduced
+                chi_square_array_per_diffusion[0]=chi_square
+                #chi_square_array_per_diffusion[0]=chi_reduced
+                pvalue_array_per_diffusion[0]=p_value
                 model_name[0]=fluxes_per_element_per_diffusion[halo_model][-1]
                 #ratios_splined_per_diffusion[0]=B_C_ratio_spline
                 #stats_per_diffusion[0]=stats_obj
                 #stats_masked_per_diffusion[0]=stats_obj_masked
             elif halo_model==11: #this is L=20 so set it to last pos
-                #chi_square_array_per_diffusion[19]=chi_square
-                chi_square_array_per_diffusion[19]=chi_reduced
-                pvalue_array_per_diffusion[19]=p_reduced
+                chi_square_array_per_diffusion[19]=chi_square
+                #chi_square_array_per_diffusion[19]=chi_reduced
+                pvalue_array_per_diffusion[19]=p_value
                 model_name[19]=fluxes_per_element_per_diffusion[halo_model][-1]
                 #ratios_splined_per_diffusion[19]=B_C_ratio_spline
                 #stats_per_diffusion[19]=stats_obj
                 #stats_masked_per_diffusion[19]=stats_obj_masked
             elif halo_model>=12:  # these are j>=12 where j==12 is L=2 so set to 1 pos in array, j==13 set it 2 in array
-                #chi_square_array_per_diffusion[halo_model-11]=chi_square
-                chi_square_array_per_diffusion[halo_model-11]=chi_reduced
-                pvalue_array_per_diffusion[halo_model-11]=p_reduced
+                chi_square_array_per_diffusion[halo_model-11]=chi_square
+                #chi_square_array_per_diffusion[halo_model-11]=chi_reduced
+                pvalue_array_per_diffusion[halo_model-11]=p_value
                 model_name[halo_model-11]=fluxes_per_element_per_diffusion[halo_model][-1]
                 #ratios_splined_per_diffusion[halo_model-11]=B_C_ratio_spline
                 #stats_per_diffusion[halo_model-11]=stats_obj
@@ -199,6 +199,50 @@ def run_chi_square_test(seq,num_spline_steps,cutoff):
     #print(pvalue_nparray)
     return chi_square_nparray, pvalue_nparray
 
+def find_chi_minimum(chi_squares_full):
+    # quantities for the analysis
+    num_spline_steps=2000
+    kinetic_energy_cutoff=20 # GeV/nucleon
+    cutoff=rigidity_calc(kinetic_energy_cutoff,13,6) # the other two args are, in order, mass (num nucleons) and charge (Z).
+    #chi_squares_full, chi_squares_full_np,models,stats_full, stats_masked_full=run_chi_square_test(1,num_spline_steps,cutoff)
+    # for the chi_square numpy array with shape [20,20], the first index would be constant diffusion and the second index constant halo size.
+    # so varying the second index is sampling different halo sizes
+    # when using np.where(array) the return is a tuple.
+    # tuple is 2 dimensionful, where tuple[0] is the diffusion index and tuple[1] is the halo index
+    # but if many values are found in where, then space is expanded:
+    # tuple[0][0] first diffusion index found that logically works
+    # tuple[1][0] first halo index found that logically works
+    # tuple[0][-1] last diffusion index found that logically works
+    #chi_squares_full, pvalues_full=run_chi_square_test(1,num_spline_steps,cutoff)
+    #minimum_chi=np.amin(chi_squares_full)
+    minimum_tuple=np.where(chi_squares_full==np.amin(chi_squares_full))
+    min_chi_square=chi_squares_full[minimum_tuple]
+    min_halo_model=minimum_tuple[1]+1
+    min_diffusion_model=minimum_tuple[0]+1
+    # 95% confidence level will be at a delta chi square of 6.14 above the minimum
+    print(f'minimum chi square is {min_chi_square} where L={min_halo_model} and D={min_diffusion_model}')
+    delta_chi_square=6.14
+    allowed_models=np.where(chi_squares_full<=(min_chi_square+delta_chi_square))
+    diffusion_models_allowed=allowed_models[0]+1 # add one since these are indices but correspond to the diffusion coefficient
+    halo_models_allowed=allowed_models[1]+1 # add one since these are indices but correspond to the halo size
+    #something else
+    with open("chisquarefile_cutoff.txt", 'w') as file:
+        for row in chi_squares_full:
+            s = " ".join(map(str, row))
+            file.write(s+'\n')
+    print("File saved")
+    #file.write(f'{minimum_tuple}')
+    #plt.figure(figsize=(12,12))
+    #plt.plot(diffusion_models_allowed,halo_models_allowed,'b--',linewidth=3,label='95% interval')
+    #plt.plot(min_diffusion_model,min_halo_model,marker='X',ms=8,label='Minimum')
+    #plt.xlim([1,20])
+    #plt.ylim([1,20])
+    #plt.xlabel("Diffusion Coefficient "r'$10^{28}cm^{2}s^{-1}$', fontsize = 14)
+    #plt.ylabel("Halo Size (kpc)", fontsize = 14)
+    #plt.title("Chi Square 95% Confidence Interval for B/C")
+    #plt.savefig(filepaths.images_path+'Confidence_Interval_B_C_'+str(kinetic_energy_cutoff)+'_.png',dpi=400)
+
+
 def make_colormap(seq):
     # quantities for the analysis
     num_spline_steps=2000
@@ -218,7 +262,9 @@ def make_colormap(seq):
     sns.set_style("white")
     fig, ax = plt.subplots(figsize=(10,10))
     #cax=ax.matshow(sum_squares_full, cmap = 'Greens')
-    cax=ax.matshow(chi_squares_full, cmap='plasma', norm=LogNorm(vmin=0.1, vmax=1000))
+    # Try tranposing to make halo size on y axis
+    chi_squares_transposed=np.transpose(chi_squares_full)
+    cax=ax.matshow(chi_squares_transposed, cmap='plasma', norm=LogNorm(vmin=1, vmax=1000),origin='lower')
     ax.tick_params(axis="x", bottom=True, top=False, labelbottom=True, labeltop=False)
     ax.set_xticks([i for i in range(20)])
     ax.set_xticklabels([str(i) for i in range(1,21)], fontsize=14)
@@ -228,15 +274,21 @@ def make_colormap(seq):
     ax.set_yticks([i for i in range(20)])
     ax.set_yticklabels([str(i) for i in range(1,21)], fontsize=14)
     #ax.set_xticklabels([str(i) for i in Categories], rotation = 90,fontsize=14)
-    ax.set_ylabel("Diffusion Coefficient "r'$10^{28}cm^{2}s^{-1}$', fontsize = 14)
-    ax.set_xlabel("Halo Size (kpc)", fontsize = 14)
+    ax.set_xlabel("Diffusion Coefficient "r'$10^{28}cm^{2}s^{-1}$', fontsize = 14)
+    ax.set_ylabel("Halo Size (kpc)", fontsize = 14)
     #plt.tight_layout()
     plt.title("Chi Square for B/C", y=1.08)
     print("about to save")
     #plt.savefig("heatmap_example_B_C_new_1.png",dpi=400)
-    plt.savefig(filepaths.images_path+'heatmap_example_B_C_reduced'+str(kinetic_energy_cutoff)+'_.png',dpi=400)
+    plt.savefig(filepaths.images_path+'heatmap_example_B_C_'+str(kinetic_energy_cutoff)+'_.png',dpi=400)
+    #make_pvalue_colormap(pvalues_full,kinetic_energy_cutoff)
+    find_chi_minimum(chi_squares_full)
+    return True
+
+def make_pvalue_colormap(pvalues_full,kinetic_energy_cutoff):
     # now pvalues
-    cax=ax.matshow(pvalues_full, cmap='plasma', norm=LogNorm(vmin=0, vmax=1))
+    fig, ax = plt.subplots(figsize=(10,10))
+    cax=ax.matshow(pvalues_full, cmap='plasma')
     ax.tick_params(axis="x", bottom=True, top=False, labelbottom=True, labeltop=False)
     ax.set_xticks([i for i in range(20)])
     ax.set_xticklabels([str(i) for i in range(1,21)], fontsize=14)
@@ -251,8 +303,11 @@ def make_colormap(seq):
     #plt.tight_layout()
     plt.title("P-Value for B/C", y=1.08)
     print("about to save")
-    plt.savefig(filepaths.images_path+'heatmap_example_B_C_reduced_pvalues'+str(kinetic_energy_cutoff)+'_.png',dpi=400)
+    print(pvalues_full)
+    plt.savefig(filepaths.images_path+'heatmap_example_B_C_pvalues'+str(kinetic_energy_cutoff)+'_.png')
     #make_colormap_mask(stats_masked_full,kinetic_energy_cutoff)
+
+
 
 def make_colormap_mask(stats_obj_masked,kinetic_energy_cutoff):
     font = {'family' : 'normal',

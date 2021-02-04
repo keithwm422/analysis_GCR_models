@@ -23,7 +23,8 @@ def make_energies_and_errors(df,num,den):
     ratio=np.array(df[ratio_name].values)
     ratio_sys_errors=np.array(df._sys.values)
     ratio_stat_errors=np.array(df._stat.values)
-    ratio_errors=np.sqrt(np.square(ratio_stat_errors)+np.square(ratio_sys_errors))
+    #ratio_errors=np.sqrt(np.square(ratio_stat_errors)+np.square(ratio_sys_errors))
+    ratio_errors=ratio_stat_errors.copy() # just use statistical errors since systematic errors have correlation over energy bins and those can't be used yet.
     return rigidity_mp,rigidity_binsize,ratio,ratio_errors
 
 ### Load the data from a csv file into a Pandas DF ###
