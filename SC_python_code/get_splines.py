@@ -19,13 +19,16 @@ def find_interpolation_range(*argv):
         max_list.append(arg[-1])
     return max(min_list),min(max_list)
 
-#energy needs to be an array of energy values in GeV. Not log energy, just energy.
+def gimme_rigidity(energy,mass,charge):
+    return rigidity_calc(energy,mass,charge)
+
+#energy needs to be an array of energy values in GeV/n. Not log energy, just energy.
 def gimme_Li_rigidity_arrays(energy):
     rig_li_6=rigidity_calc(energy,6,3) # need to make sure energy is not log-energy
     rig_li_7=rigidity_calc(energy,7,3)
     return rig_li_6, rig_li_7
 
-#energy needs to be an array of energy values in GeV. Not log energy, just energy.
+#energy needs to be an array of energy values in GeV/n. Not log energy, just energy.
 def gimme_Be_rigidity_arrays(energy):
     rig_be_10=rigidity_calc(energy,10,4) # need to make sure energy is not log-energy
     rig_be_9=rigidity_calc(energy,9,4)
@@ -177,3 +180,48 @@ def B_O_ratio_original(energy,logB10_flux,logB11_flux,logO16_flux,logO17_flux,lo
     O_total_flux_spline=np.add(O_total_flux_spline,O18_flux_spline)
     B_O_ratio_spline=np.divide(B_total_flux_spline,O_total_flux_spline)
     return rigB10_spline,B_O_ratio_spline
+
+# TRY THE FORCE_FIELD
+#try the force-field approx
+#companion function, EK is a column array
+def force_field_factor(Z,A,phi,EK):
+    proton_mass= 0.938 #In GeV
+    PHI=Z*phi/A #really this is (Z e phi)/A but e=1 in the units I want
+    print(PHI)
+    EK_shifted=EK.copy()
+    EK_shifted=EK_shifted-PHI
+    EK_sum=EK_shifted.copy()+2*A*proton_mass
+    EK_num=EK_shifted*EK_sum
+    EK_orig=EK.copy()
+    EK_sum_2=EK_orig+2*A*proton_mass
+    EK_denom=EK_orig*EK_sum_2
+    return np.true_divide(EK_num,EK_denom), EK_shifted
+# this function returns the spectra at Earth of the isotope provided (charge, Z, and mass, A) and its shifted energy values
+#given the solar modulation potential phi and the Kinetic energy of the particle
+#phi needs to be in units of GV not MV
+#EK in GeV (not per nucleon!)
+def force_field_approx(LIS,Z,A,phi,EK):
+    factor,EK_shifted=force_field_factor(Z,A,phi,EK)
+    return LIS*(factor),EK_shifted
+
+#The process to get modulated nuclei flux ratios vs rigidity for simulated isotopes,
+# make sure energy is array that is not logged and is in units of GeV/n
+# make the energy a list and the flux a list of arrays
+#mass is same length as other lists
+#charge is same length as other lists
+#returns one array of each: ratio and common rigidity
+#fluxes should already be logged
+def B_C_ratio_modulated(energy,flux,mass,charge,num_steps):
+    i=0
+    rigidities=[]
+    while i <len(energy):
+        rigidities.append(np.array(log_energy(gimme_rigidity(energy[i],mass[i],charge[i]))))
+        i+=1
+    numerator_x_list=[rigidities[0],rigidities[1]]
+    numerator_y_list=[flux[0],flux[1]]
+    denominator_x_list=[rigidities[2],rigidities[3]]
+    denominator_y_list=[flux[2],flux[3]] 
+    spline_min_R,spline_max_R=find_interpolation_range(rigidities[0],rigidities[1],rigidities[2],rigidities[3])
+    ratio,rig_values=calc_ratio_spline(numerator_x_list,numerator_y_list,
+        denominator_x_list,denominator_y_list,spline_min_R,spline_max_R,num_steps)
+    return rig_values, ratio
