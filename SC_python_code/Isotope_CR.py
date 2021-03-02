@@ -3,7 +3,57 @@ import numpy as np
 from get_splines import *
 
 
-
+def make_oxygen_nuclei(name,charge,energy_per_nuc,model,solar_phi,spline_steps,fluxes_per_element_full):
+    o_obj=Nuclei(name,charge)
+    o_obj.add_isotopes('O-16',16,charge)
+    o_obj.add_isotopes('O-17',17,charge)
+    o_obj.add_isotopes('O-18',18,charge)
+    j=0
+    #print(len(o_obj.list_isotopes))
+    while j< len(o_obj.list_isotopes):
+        o_obj.list_isotopes[j].add_energy_per_nucleon(energy_per_nuc)
+        #print(cosmic_ray_nuclei_index.oxygen_list[j])
+        #print(j)
+        o_obj.list_isotopes[j].add_flux(fluxes_per_element_full[model][
+            cosmic_ray_nuclei_index.element_index.index(cosmic_ray_nuclei_index.oxygen_list[j])])
+        o_obj.list_isotopes[j].add_modulation(solar_phi)
+        j+=1
+    o_obj.add_isotope_fluxes()
+    o_obj.calc_total_flux(spline_steps)
+    return o_obj
+def make_carbon_nuclei(name,charge,energy_per_nuc,model,solar_phi,spline_steps,fluxes_per_element_full):
+    c_obj=Nuclei(name,charge)
+    c_obj.add_isotopes('C-12',12,charge)
+    c_obj.add_isotopes('C-13',13,charge)
+    j=0
+    #print(len(c_obj.list_isotopes))
+    while j< len(c_obj.list_isotopes):
+        c_obj.list_isotopes[j].add_energy_per_nucleon(energy_per_nuc)
+        c_obj.list_isotopes[j].add_flux(fluxes_per_element_full[model][
+            cosmic_ray_nuclei_index.element_index.index(cosmic_ray_nuclei_index.carbon_list[j])])
+        c_obj.list_isotopes[j].add_modulation(solar_phi)
+        j+=1
+    c_obj.add_isotope_fluxes()
+    c_obj.calc_total_flux(spline_steps)
+    return c_obj
+def make_boron_nuclei(name,charge,energy_per_nuc,model,solar_phi,spline_steps,fluxes_per_element_full):
+    n_obj=Nuclei(name,charge)
+    n_obj.add_isotopes('B-10',10,charge)
+    n_obj.add_isotopes('B-11',11,charge)
+    j=0
+    print(len(n_obj.list_isotopes))
+    while j< len(n_obj.list_isotopes):
+        n_obj.list_isotopes[j].add_energy_per_nucleon(energy_per_nuc.copy())
+        #print(cosmic_ray_nuclei_index.boron_list[j])
+        #print(j)
+        n_obj.list_isotopes[j].add_flux(np.array(fluxes_per_element_full[model][
+            cosmic_ray_nuclei_index.element_index.index(cosmic_ray_nuclei_index.boron_list[j])].copy()))
+        n_obj.list_isotopes[j].add_modulation(solar_phi)
+        j+=1
+    #print(n_obj.list_isotopes[-1].flux)
+    n_obj.add_isotope_fluxes()
+    n_obj.calc_total_flux(spline_steps)
+    return n_obj
 # TRY THE FORCE_FIELD
 #try the force-field approx
 #companion function, EK is a column array
@@ -28,6 +78,26 @@ def force_field_approx(LIS,Z,A,phi,EK):
     factor,EK_shifted=force_field_factor(Z,A,phi,EK)
     return LIS*(factor),EK_shifted
 
+'''class Ratio:
+    def __init__(self,name):
+        self.name = name
+        self.energy = []
+        self.rigidity = []
+        self.energy_per_nucleon = []
+        self.ratio_energy_per_nucleon = []
+        self.ratio_rigidity = []
+        self.ratio_energy = []
+        self.ratio_energy_per_nucleon_modulated = []
+        self.ratio_rigidity_modulated = []
+        self.ratio_energy_modulated = []
+        self.rigidity_modulated = []
+        self.energy_modulated = []
+        self.energy_per_nucleon_modulated=[]   
+        self.phi = 0
+        self.list_nuclei=[]
+        self.spectral_index=0
+        self.fit_cutorr_rigidity=0
+'''        
 #no energy per nucleon for a nucleus
 class Nuclei:
     def __init__(self, name, charge):
@@ -80,12 +150,12 @@ class Nuclei:
             # so divide by A (mass/# nucleons) and while thats going on lets just multiply 
             #in the 10^7 for converting cm^-2 to m^-2 and MeV^-1 to GeV^-1
             while i<len(self.list_isotopes):
-                fluxes.append(log_energy(np.true_divide(self.list_isotopes[i].flux.copy(),
-                                                        self.list_isotopes[i].mass*10**(-7))))
+                #fluxes.append(log_energy(np.true_divide(self.list_isotopes[i].flux.copy(),
+                                                        #self.list_isotopes[i].mass*(10**(-7)))))
+                fluxes.append(log_energy(self.list_isotopes[i].flux.copy()))
                 rigidities.append(log_energy(self.list_isotopes[i].rigidity.copy()))
                 energies.append(log_energy(self.list_isotopes[i].energy.copy()))
-                fluxes_mod.append(log_energy(np.true_divide(self.list_isotopes[i].flux_modulated.copy(),
-                                                        self.list_isotopes[i].mass*10**(-7))))
+                fluxes_mod.append(log_energy(self.list_isotopes[i].flux_modulated.copy()))
                 rigidities_mod.append(log_energy(self.list_isotopes[i].rigidity_modulated.copy()))
                 energies_mod.append(log_energy(self.list_isotopes[i].energy_modulated.copy()))
                 energies_per_nuc_mod.append(log_energy(self.list_isotopes[i].energy_modulated_per_nucleon.copy()))
@@ -109,23 +179,23 @@ class Nuclei:
                 flux_rtne_mod=np.array(undo_log_energy(flux_rtne_mod))
                 flux_rtnen_mod=np.array(undo_log_energy(flux_rtnen_mod))
                 if i==0:
-                    self.flux_rigidity=flux_rtnr
-                    self.flux_energy=flux_rtne
-                    self.flux_rigidity_modulated=flux_rtnr_mod
-                    self.flux_energy_modulated=flux_rtne_mod
-                    self.flux_energy_per_nucleon_modulated=flux_rtnen_mod
+                    self.flux_rigidity=np.array(flux_rtnr.copy())
+                    self.flux_energy=np.array(flux_rtne.copy())
+                    self.flux_rigidity_modulated=np.array(flux_rtnr_mod.copy())
+                    self.flux_energy_modulated=np.array(flux_rtne_mod.copy())
+                    self.flux_energy_per_nucleon_modulated=np.array(flux_rtnen_mod.copy())
                 else:
-                    self.flux_rigidity= self.flux_rigidity+flux_rtnr
-                    self.flux_energy= self.flux_energy+flux_rtne
-                    self.flux_rigidity_modulated= self.flux_rigidity_modulated+flux_rtnr_mod                
-                    self.flux_energy_modulated= self.flux_energy_modulated+flux_rtne_mod
-                    self.flux_energy_per_nucleon_modulated= self.flux_energy_per_nucleon_modulated+flux_rtnen_mod                
+                    self.flux_rigidity= self.flux_rigidity+np.array(flux_rtnr.copy())
+                    self.flux_energy= self.flux_energy+np.array(flux_rtne.copy())
+                    self.flux_rigidity_modulated= self.flux_rigidity_modulated+np.array(flux_rtnr_mod.copy())                
+                    self.flux_energy_modulated= self.flux_energy_modulated+np.array(flux_rtne_mod.copy())
+                    self.flux_energy_per_nucleon_modulated= self.flux_energy_per_nucleon_modulated+np.array(flux_rtnen_mod.copy())                
                 i+=1
-            self.rigidity=np.array(undo_log_energy(rig_rtn))
-            self.energy=np.array(undo_log_energy(ene_rtn))
-            self.rigidity_modulated=np.array(undo_log_energy(rig_rtn_mod))
-            self.energy_modulated=np.array(undo_log_energy(ene_rtn_mod))
-            self.energy_per_nucleon_modulated=np.array(undo_log_energy(enen_rtn_mod))
+            self.rigidity=np.array(undo_log_energy(rig_rtn.copy()))
+            self.energy=np.array(undo_log_energy(ene_rtn.copy()))
+            self.rigidity_modulated=np.array(undo_log_energy(rig_rtn_mod.copy()))
+            self.energy_modulated=np.array(undo_log_energy(ene_rtn_mod.copy()))
+            self.energy_per_nucleon_modulated=np.array(undo_log_energy(enen_rtn_mod.copy()))
         else:
             print("add more isotopes\n")
     
@@ -147,18 +217,20 @@ class Nuclei:
         def add_energy_per_nucleon(self, energy_per_nuc):
             self.energy_per_nucleon=np.array(energy_per_nuc)
             # now recalculate the energy, and the rigidity, 
-            self.rigidity=np.array(rigidity_calc(energy_per_nuc,self.mass,self.charge))
-            self.energy=np.array(energy_per_nuc)*self.mass
+            self.rigidity=np.array(rigidity_calc(energy_per_nuc.copy(),self.mass,self.charge))
+            self.energy=np.array(energy_per_nuc.copy())*self.mass
     
         ## NO LOGS
         def add_flux(self,flux_in):
             #correct the flux?
             mev_nuc=np.array(self.energy_per_nucleon.copy()*10**3)
-            self.flux=np.array(np.true_divide(flux_in,mev_nuc*mev_nuc))
+            self.flux=np.array(np.true_divide(flux_in,mev_nuc*mev_nuc*self.mass*(10**(-7))))
+            #fluxes.append(log_energy(np.true_divide(self.list_isotopes[i].flux.copy(),
+                                      #self.list_isotopes[i].mass*(10**(-7)))))
         def add_modulation(self,solar):
             # once the fluxes+phi have been input then the modulation can occur as well, given a solar phi
             self.phi=solar
             self.flux_modulated,self.energy_modulated=force_field_approx(self.flux.copy(),self.charge,self.mass,self.phi,self.energy.copy())
-            self.energy_modulated_per_nucleon=np.array(self.energy_modulated/self.mass)
-            self.rigidity_modulated=np.array(rigidity_calc(self.energy_modulated_per_nucleon,self.mass,self.charge))
+            self.energy_modulated_per_nucleon=np.array(self.energy_modulated.copy()/self.mass)
+            self.rigidity_modulated=np.array(rigidity_calc(self.energy_modulated_per_nucleon.copy(),self.mass,self.charge))
             
