@@ -1,7 +1,27 @@
 from cosmic_ray_nuclei_index import rigidity_calc, undo_log_energy, log_energy
 import numpy as np
 from get_splines import *
+from scipy.optimize import curve_fit
 
+def flux_ratio_versus_x(numerator_x,numerator_y,denominator_x,denominator_y,spline_steps):
+    num_x=np.array(log_energy(numerator_x.copy()))
+    den_x=np.array(log_energy(denominator_x.copy()))
+    x_list=[num_x,den_x]
+    num_y=np.array(log_energy(numerator_y.copy()))
+    den_y=np.array(log_energy(denominator_y.copy()))
+    y_list=[num_y,den_y]
+    #common x range
+    spline_min_x,spline_max_x=find_interpolation_range(*x_list)
+    #numerator
+    num_x_rtn,num_y_rtn=spline(num_x,num_y, spline_steps,spline_min_x,spline_max_x)
+    num_x_rtn=np.array(undo_log_energy(num_x_rtn))
+    num_y_rtn=np.array(undo_log_energy(num_y_rtn))
+    #denominator
+    den_x_rtn,den_y_rtn=spline(den_x,den_y, spline_steps,spline_min_x,spline_max_x)
+    den_x_rtn=np.array(undo_log_energy(den_x_rtn))
+    den_y_rtn=np.array(undo_log_energy(den_y_rtn))
+    ratio=np.true_divide(num_y_rtn,den_y_rtn)
+    return num_x_rtn,ratio
 
 def make_oxygen_nuclei(name,charge,energy_per_nuc,model,solar_phi,spline_steps,fluxes_per_element_full):
     o_obj=Nuclei(name,charge)
@@ -54,6 +74,8 @@ def make_boron_nuclei(name,charge,energy_per_nuc,model,solar_phi,spline_steps,fl
     n_obj.add_isotope_fluxes()
     n_obj.calc_total_flux(spline_steps)
     return n_obj
+
+
 # TRY THE FORCE_FIELD
 #try the force-field approx
 #companion function, EK is a column array
@@ -78,7 +100,10 @@ def force_field_approx(LIS,Z,A,phi,EK):
     factor,EK_shifted=force_field_factor(Z,A,phi,EK)
     return LIS*(factor),EK_shifted
 
-'''class Ratio:
+def rigidity_power_law(R, A, GAMMA):
+    return A * (R)**(GAMMA)
+
+class Ratio:
     def __init__(self,name):
         self.name = name
         self.energy = []
@@ -94,10 +119,34 @@ def force_field_approx(LIS,Z,A,phi,EK):
         self.energy_modulated = []
         self.energy_per_nucleon_modulated=[]   
         self.phi = 0
-        self.list_nuclei=[]
-        self.spectral_index=0
-        self.fit_cutorr_rigidity=0
-'''        
+        self.numerator = []
+        self.denominator = []
+        self.spectral_index = 0
+        self.spectral_amplitude = 0
+        self.covariance = []
+        self.fit_cutoff_rigidity = 0
+    def add_nuclei(self,num,den,spline_steps):
+        self.numerator=num
+        self.denominator=den
+        self.rigidity,self.ratio_rigidity=flux_ratio_versus_x(num.rigidity,num.flux_rigidity,den.rigidity,den.flux_rigidity,spline_steps)
+        self.energy,self.ratio_energy=flux_ratio_versus_x(num.energy,num.flux_energy,den.energy,den.flux_energy,spline_steps)
+        self.energy_per_nucleon,self.ratio_energy_per_nucleon=flux_ratio_versus_x(num.energy_per_nucleon,num.flux_energy_per_nucleon,
+                                                              den.energy_per_nucleon,den.flux_energy_per_nucleon,spline_steps)
+        self.rigidity_modulated,self.ratio_rigidity_modulated=flux_ratio_versus_x(num.rigidity_modulated,num.flux_rigidity_modulated
+                                                              ,den.rigidity_modulated,den.flux_rigidity_modulated,spline_steps)
+        self.energy_modulated,self.ratio_energy_modulated=flux_ratio_versus_x(num.energy_modulated,num.flux_energy_modulated
+                                                              ,den.energy_modulated,den.flux_energy_modulated,spline_steps)
+        self.energy_per_nucleon_modulated,self.ratio_energy_per_nucleon_modulated=flux_ratio_versus_x(
+                                                       num.energy_per_nucleon_modulated,num.flux_energy_per_nucleon_modulated,
+                                                       den.energy_per_nucleon_modulated,den.flux_energy_per_nucleon_modulated,spline_steps)
+        self.phi=self.numerator.phi
+    def fit_ratio(self,R_cutoff):
+        self.cutoff=R_cutoff
+        popt_ratio, pcov_ratio = curve_fit(rigidity_power_law,self.rigidity[self.rigidity>R_cutoff],
+                                           self.ratio_rigidity[self.rigidity>R_cutoff],[10,-0.75],bounds=(-2,[1000,2]))
+        self.covariance=np.array(pcov_ratio)
+        self.spectral_index=popt_ratio[1]
+        self.spectral_amplitude=popt_ratio[0]
 #no energy per nucleon for a nucleus
 class Nuclei:
     def __init__(self, name, charge):
@@ -196,6 +245,7 @@ class Nuclei:
             self.rigidity_modulated=np.array(undo_log_energy(rig_rtn_mod.copy()))
             self.energy_modulated=np.array(undo_log_energy(ene_rtn_mod.copy()))
             self.energy_per_nucleon_modulated=np.array(undo_log_energy(enen_rtn_mod.copy()))
+            self.phi=self.list_isotopes[0].phi
         else:
             print("add more isotopes\n")
     
