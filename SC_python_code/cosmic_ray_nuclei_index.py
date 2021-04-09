@@ -1,7 +1,7 @@
 import numpy as np
 x_loc=24
 y_loc=22
-z_loc=20
+z_loc=10
 # now all of the ratios we want need to be included are listed below
 # B/C
 # He-3/H3-4

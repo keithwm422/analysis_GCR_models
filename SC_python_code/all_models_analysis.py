@@ -1,5 +1,10 @@
 # This code is a combination of a bunch of other tests with jupyter notebooks. 
 # Author: Keith McBride, Jan 2021
+# updated April 2021: include confined simulations in z-dir
+# use classes for holding all the arrays 
+# applies solar modulation in the force-field approximation
+# fits spectra in the class, using scipy optimize curvefit, above some input cutoff
+# 
 # Run this to compare the AMS data and ALOT OF GALPROP models 
 # using the chi-square test statistic. 
 # The resulting output will be the B/C AMS data and the best fit model, as a function of rigidity. 
@@ -29,7 +34,7 @@ from get_residuals_chi_square import *
 from open_tarfile import get_fluxes_from_files
 # Example function for testing this procedure before expanding to many ratios
 def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
-    ############ FIRST THE DATA
+    ########## FIRST THE DATA ##########
     MAX_DIFFUSION=20
     numerator='B'  # numerator of the nuclei ratio used in the chi_square calculation (needs to also be AMS_DATA file first character)
     denominator='C'  # same as numerator but denominator for the nuclei ratio
@@ -50,12 +55,11 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
     #H2_H1_df=load_H2_H1_ratio()
     #He3_He4_ratio=load_He3_He4_ratio()
     #B_C_voyager_df=load_B_C_ratio_voyager()
-    ############### DATA LOADED
+    #### DATA LOADED
     ### two x axis values occur:
     ### FOR NUCLEI RATIOS (EXCEPT VOYAGER) : Rigidity [GV]
     ### FOR ISOTOPE RATIOS (AND B/C-VOYAGER) : Kinetic Energy [GeV/n]
     ### ALL y axis values are ratios (no intensities or fluxes)
-    ###############
     #print(f'Num data points in AMS data: {len(ratio)}')
     #     IF YOU WANT TO PLOT JUST THE DATA run the code below  #
     #do you want y-axis log-scaled? (1=yes)
@@ -64,19 +68,15 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
     #make_plot_of_B_C_voyager_data(B_C_voyager_df,'B','C',log_show)
     # look at get_ams_data_functions for more plotting functions
     print("success, data loaded")
-    #     END PLOTTING THE DATA    #
-    ################################
-    # SECOND THE SIMULATION SETS
+    ########## END PLOTTING AND LOADING THE DATA ##########
+    ########## SECOND THE SIMULATION SETS ##########
     # make arrays of the energy axis for all isotope fluxes (GALPROP states kinetic energy [MeV/n] as FITS file energy axis)
     # get energy axis and change to GeV (undo the logarithm to put in actual energy units) # this is done step by step to make it SUPER transparent. 
     energy=np.arange(2,9,0.304347391792257) # construct the log energy array (these are just the powers of base 10) that matches galprop fits files
     energy=undo_log_energy(energy) # undo the logarithm so now these are MeV/nucleon energies 
     #energy_mev_nuc=energy.copy() # the energy array in MeV/nuc for converting the flux when being read in.
     energy=np.true_divide(energy,10**3) # change to GeV/nucleon because the rigidity conversion is in GeV (mp=0.938 GeV)
-    #print(f'ENERGY ARRAY: {energy}')
-
     # BIG LOOP TO GET ALL 400 models in sets of 20 (constant diffusion coefficient but varying halo size)
-
     #chi_square_array=[] # in the end this is a list of the models that is arbitrary dimensional
     chi_square_nparray=np.empty([20,20]) # this is what we expect the chi_square_array to be if all goes well, where each value is the chi_square on a grid of halo size vs diffusion coeff
     pvalue_nparray=np.empty([20,20]) # this is what we expect the chi_square_array to be if all goes well, where each value is the chi_square on a grid of halo size vs diffusion coeff
@@ -91,6 +91,7 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
     while diffusion_number<MAX_DIFFUSION+1:
         chi_square_temp=[]  # reset this one at each iteration
         #first arg is not used currently for the following function (so it can be anything really)
+        #fluxes_per_element_per_diffusion=get_fluxes_from_files(1, diffusion_number)  # to store the loaded fluxes from GALPROP sims, this uses tarzipped files
         fluxes_per_element_per_diffusion=get_fluxes_from_files(1, diffusion_number)  # to store the loaded fluxes from GALPROP sims
         # ALL DATA AND FLUXES HAVE BEEN LOADED in the fluxes_per_element_per_diffusion array
         # ADJUST UNITS OF THE SIMULATION ARRAYS
@@ -191,7 +192,7 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
     print(spectral_index_nparray)
     print(spectral_amplitude_nparray)
     print(covariance_nparray)
-    np.savetxt('spectralindex.txt', spectral_index_nparray, fmt='%f')
+    np.savetxt('spectralindexfits_-0.33nominal.txt', spectral_index_nparray, fmt='%f')
     #print(pvalue_nparray)
     #return chi_square_nparray, pvalue_nparray
     #return spectral_index_nparray,spectral_amplitude_nparray,covariance_nparray
