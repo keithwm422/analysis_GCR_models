@@ -75,7 +75,7 @@ def make_boron_nuclei(name,charge,energy_per_nuc,model,solar_phi,spline_steps,fl
     n_obj.calc_total_flux(spline_steps)
     return n_obj
 
-def make_boron_nuclei(name,charge,energy_per_nuc,model,solar_phi,spline_steps,fluxes_per_element_full):
+def make_beryllium_nuclei(name,charge,energy_per_nuc,model,solar_phi,spline_steps,fluxes_per_element_full):
     n_obj=Nuclei(name,charge)
     n_obj.add_isotopes('Be-10',10,charge)
     n_obj.add_isotopes('Be-9',9,charge)
@@ -87,7 +87,7 @@ def make_boron_nuclei(name,charge,energy_per_nuc,model,solar_phi,spline_steps,fl
         #print(cosmic_ray_nuclei_index.boron_list[j])
         #print(j)
         n_obj.list_isotopes[j].add_flux(np.array(fluxes_per_element_full[model][
-            cosmic_ray_nuclei_index.element_index.index(cosmic_ray_nuclei_index.be_list[j])].copy()))
+            cosmic_ray_nuclei_index.element_index.index(cosmic_ray_nuclei_index.beryllium_list[j])].copy()))
         n_obj.list_isotopes[j].add_modulation(solar_phi)
         j+=1
     #print(n_obj.list_isotopes[-1].flux)
