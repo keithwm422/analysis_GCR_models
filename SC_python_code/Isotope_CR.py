@@ -2,6 +2,7 @@ from cosmic_ray_nuclei_index import rigidity_calc, undo_log_energy, log_energy
 import numpy as np
 from get_splines import *
 from scipy.optimize import curve_fit
+from get_residuals_chi_square import *
 
 def flux_ratio_versus_x(numerator_x,numerator_y,denominator_x,denominator_y,spline_steps):
     num_x=np.array(log_energy(numerator_x.copy()))
@@ -144,6 +145,9 @@ class Ratio:
         self.spectral_amplitude = 0
         self.covariance = []
         self.fit_cutoff_rigidity = 0
+        self.chi_square_val = 0 
+        self.chi_square_red = 0 
+        self.residuals = [] 
     def add_nuclei(self,num,den,spline_steps):
         self.numerator=num
         self.denominator=den
@@ -166,7 +170,11 @@ class Ratio:
         self.covariance=np.array(pcov_ratio)
         self.spectral_index=popt_ratio[1]
         self.spectral_amplitude=popt_ratio[0]
-#no energy per nucleon for a nucleus
+    # this requires you to know about the data values passed. defaults should be rigidity units.
+    def analyze_ratio(self,data_x,data_y,data_error):
+        self.residuals, self.chi_square_val,self.chi_square_red=calculate_chi_squares(data_x,data_y,
+                                                       self.rigidity[self.rigidity>self.cutoff],self.ratio_rigidity[self.rigidity>self.cutoff],data_error)
+
 class Nuclei:
     def __init__(self, name, charge):
         self.name = name
@@ -187,7 +195,9 @@ class Nuclei:
         # and the isotopes
         self.list_isotopes=[]
         self.spectral_index=0
-
+        self.chi_square_val=0
+        self.chi_square_red = 0 
+        self.residuals = [] 
     def add_isotopes(self,name_iso,mass_iso,charge_iso):
         self.list_isotopes.append(self.isotope(name_iso,mass_iso,charge_iso))
 
@@ -282,6 +292,9 @@ class Nuclei:
             self.rigidity_modulated = []
             self.flux_modulated = []
             self.phi = 0
+            self.chi_square_val = 0
+            self.chi_square_red = 0 
+            self.residuals = [] 
         ## NO LOGS    
         def add_energy_per_nucleon(self, energy_per_nuc):
             self.energy_per_nucleon=np.array(energy_per_nuc)

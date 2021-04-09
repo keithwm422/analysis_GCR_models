@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import filepaths
 
 ### Takes the dataframe and returns the different columns separately including the calculated central rigidity bin value.
-def make_energies_and_errors(df,num,den):
+def make_energies_and_errors(df,num,den,tots_error):
     rigidity=np.array((df.R_low.values,df.R_high.values.T))
     rigidity_mp=(rigidity[0,:]+rigidity[1,:])/2.0
     rigidity_binsize=(rigidity[1,:]-rigidity[0,:])/2.0
@@ -23,8 +23,9 @@ def make_energies_and_errors(df,num,den):
     ratio=np.array(df[ratio_name].values)
     ratio_sys_errors=np.array(df._sys.values)
     ratio_stat_errors=np.array(df._stat.values)
-    #ratio_errors=np.sqrt(np.square(ratio_stat_errors)+np.square(ratio_sys_errors))
     ratio_errors=ratio_stat_errors.copy() # just use statistical errors since systematic errors have correlation over energy bins and those can't be used yet.
+    if tots_error==1:
+        ratio_errors=np.sqrt(np.square(ratio_stat_errors)+np.square(ratio_sys_errors))
     return rigidity_mp,rigidity_binsize,ratio,ratio_errors
 
 ### Load the data from a csv file into a Pandas DF ###
@@ -34,12 +35,12 @@ def read_in_data(numerator,denominator):
     ams=pd.read_csv(read_file)
     #print(ams.head())
     return ams
-
-def load_ams_ratios(numerator,denominator):
+# which error being 1 gives the quadrature of sys and stat, whereas any other value just gives you stat
+def load_ams_ratios(numerator,denominator,which_error):
     # lets try returning the flux ratios as a dataframe
     df=read_in_data(numerator,denominator)
     column_names=['rigidity','rigidity_binsize','ratio','ratio_errors']
-    ams_data_formatted_df = pd.DataFrame(data=np.column_stack(make_energies_and_errors(df,numerator,denominator)),
+    ams_data_formatted_df = pd.DataFrame(data=np.column_stack(make_energies_and_errors(df,numerator,denominator,which_error)),
                    columns=column_names)
     return ams_data_formatted_df
 
@@ -132,7 +133,7 @@ def make_plot_of_Beisotope_data(df,numerator,denominator,log_show):
     #plt.show()
 
 ### Plot the data and save to filepaths declared directory ###
-def make_plot_of_data(df,numerator,denominator,log_show):
+def make_plot_of_data(df,numerator,denominator,log_show,which_error):
     fnt=20
     x1=df.rigidity.values[0]-0.1
     x2=1.5*df.rigidity.values[-1]
@@ -151,7 +152,10 @@ def make_plot_of_data(df,numerator,denominator,log_show):
     #plt.ylim([y1,y2])
     #plt.legend(loc='lower right', fontsize=fnt-4)
     plt.title("Example", fontsize=fnt)
-    plt.savefig(filepaths.images_path+numerator+"_"+denominator+"_ams_data.png")
+    if which_error==1:
+        plt.savefig(filepaths.images_path+numerator+"_"+denominator+"_totserror_ams_data.png")
+    else:
+        plt.savefig(filepaths.images_path+numerator+"_"+denominator+"_ams_data.png")
     #don't show on supercomputer
     #plt.show()
 

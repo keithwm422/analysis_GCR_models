@@ -7,6 +7,8 @@
 #SBATCH --job-name=test_slurm
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=mcbride.342@osu.edu
+#SBATCH --job-name=analysis_test
+#SBATCH --output=/fs/project/beatty.85/mcbride.342/analysis_GCR_models/SC_python_code/slurm_outputs/job-analysis.out
 
 #run like sbatch example_analysis.sh
 #need to load python3.7-conda4.5
