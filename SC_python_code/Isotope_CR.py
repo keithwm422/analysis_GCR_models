@@ -6,20 +6,6 @@ from get_residuals_chi_square import *
 
 # use names to construct isotope ratios stored in class nuclei
 #takes the nuclei object instance
-def calc_iso_ratio(n_obj,name_numerator,name_denominator):
-    num_isos=len(n_obj.list_isotopes)
-    j=0
-    numerator_index=99
-    denominator_index=99
-    # find the isotope with the names
-    while j<num_isos:
-        if name_numerator==n_obj.list_isotopes[j].name:
-            numerator_index=j
-        elif name_denominator==n_obj.list_isotopes[j].name:
-            denominator_index=j
-        j+=1
-    #print(f'numerator was {n_obj.list_isotopes[numerator_index].name} and denominator was {n_obj.list_isotopes[denominator_index].name}')
-    # add the isotope ratio to the nuclei obj
 
 def flux_ratio_versus_x(numerator_x,numerator_y,denominator_x,denominator_y,spline_steps):
     num_x=np.array(log_energy(numerator_x.copy()))
@@ -111,6 +97,7 @@ def make_beryllium_nuclei(name,charge,energy_per_nuc,model,solar_phi,spline_step
     #print(n_obj.list_isotopes[-1].flux)
     n_obj.add_isotope_fluxes()
     n_obj.calc_total_flux(spline_steps)
+    n_obj.calc_iso_ratio('Be-10','Be-9')
     return n_obj
 
 # TRY THE FORCE_FIELD
@@ -211,17 +198,26 @@ class Nuclei:
         self.phi=0
         # and the isotopes
         self.list_isotopes=[]
+        self.isotope_ratio_rigidity=[] # when these are calculated, they use corresponding x values from nuclei class nuclei flux
+        self.isotope_ratio_energy=[]
+        self.isotope_ratio_energy_per_nucleon=[]
+        self.isotope_ratio_rigidity_modulated=[] # when these are calculated, they use corresponding x values from nuclei class nuclei flux
+        self.isotope_ratio_energy_modulated=[]
+        self.isotope_ratio_energy_per_nucleon_modulated=[]
         self.spectral_index=0
         self.chi_square_val=0
-        self.chi_square_red = 0 
-        self.residuals = [] 
+        self.chi_square_red = 0
+        self.residuals = []
+        self.iso_chi_square_val=0
+        self.iso_chi_square_red = 0
+        self.iso_residuals = []
     def add_isotopes(self,name_iso,mass_iso,charge_iso):
         self.list_isotopes.append(self.isotope(name_iso,mass_iso,charge_iso))
 
     def add_isotope_fluxes(self):
         i=0
         while i<len(self.list_isotopes):
-            if i==0: 
+            if i==0:
                 self.flux_energy_per_nucleon=np.array(self.list_isotopes[i].flux_energy_per_nucleon.copy())
                 self.energy_per_nucleon=np.array(self.list_isotopes[i].energy_per_nucleon.copy())
             else:
@@ -306,7 +302,41 @@ class Nuclei:
             self.phi=self.list_isotopes[0].phi
         else:
             print("add more isotopes\n")
-    
+    def calc_iso_ratio(self,name_numerator,name_denominator):
+        num_isos=len(self.list_isotopes)
+        j = 0
+        numerator_index=99
+        denominator_index=99
+        # find the isotope with the names
+        while j<num_isos:
+            if name_numerator==self.list_isotopes[j].name:
+                numerator_index=j
+            elif name_denominator==self.list_isotopes[j].name:
+                denominator_index=j
+            j+=1
+        self.isotope_ratio_rigidity=np.true_divide(self.list_isotopes[numerator_index].flux_rigidity.copy(),
+                                                                   self.list_isotopes[denominator_index].flux_rigidity.copy())
+        self.isotope_ratio_energy=np.true_divide(self.list_isotopes[numerator_index].flux_energy.copy(),
+                                                                   self.list_isotopes[denominator_index].flux_energy.copy())
+        self.isotope_ratio_energy_per_nucleon=np.true_divide(self.list_isotopes[numerator_index].flux_energy_per_nucleon.copy(),
+                                                                   self.list_isotopes[denominator_index].flux_energy_per_nucleon.copy())
+        ###MODULATION
+        self.isotope_ratio_rigidity_modulated=np.true_divide(self.list_isotopes[numerator_index].flux_rigidity_modulated.copy(),
+                                                                   self.list_isotopes[denominator_index].flux_rigidity_modulated.copy())
+        self.isotope_ratio_energy_modulated=np.true_divide(self.list_isotopes[numerator_index].flux_energy_modulated.copy(),
+                                                                   self.list_isotopes[denominator_index].flux_energy_modulated.copy())
+        self.isotope_ratio_energy_per_nucleon_modulated=np.true_divide(self.list_isotopes[numerator_index].flux_energy_per_nucleon_modulated.copy(),
+                                                                   self.list_isotopes[denominator_index].flux_energy_per_nucleon_modulated.copy())
+    # this requires you to know about the data values passed. defaults should be rigidity units.
+    def analyze_ratio(self,data_x,data_y,data_error):
+        self.residuals, self.chi_square_val,self.chi_square_red=calculate_chi_squares(data_x,data_y,
+                                                       self.rigidity[self.rigidity>self.cutoff],self.ratio_rigidity[self.rigidity>self.cutoff],data_error)
+    def analyze_iso_ratio(self,data_x,data_y,data_error):
+        self.iso_residuals,self.iso_chi_square_val,self.iso_chi_square_red=calculate_chi_squares(data_x,data_y,
+                                                       self.list_isotopes[0].energy_per_nucleon_modulated.copy(),self.isotope_ratio_energy_per_nucleon_modulated.copy(),data_error)
+    #print(f'numerator was {n_obj.list_isotopes[numerator_index].name} and denominator was {n_obj.list_isotopes[denominator_index].name}')
+    # add the isotope ratio to the nuclei obj
+
     class isotope:
         def __init__(self, name,mass,charge):
             self.name = name    # instance variable unique to each instance
@@ -339,7 +369,7 @@ class Nuclei:
     
         ## NO LOGS
         def add_flux(self,flux_in):
-            #correct the flux?
+            #correct the flux/put in right units
             mev_nuc=np.array(self.energy_per_nucleon.copy()*10**3)
             self.flux_energy_per_nucleon=np.array(np.true_divide(flux_in,mev_nuc*mev_nuc*self.mass*(10**(-7))))
             self.flux_energy=self.flux_energy_per_nucleon.copy() # since its an isotope it doesnt matter
