@@ -4,6 +4,23 @@ from get_splines import *
 from scipy.optimize import curve_fit
 from get_residuals_chi_square import *
 
+# use names to construct isotope ratios stored in class nuclei
+#takes the nuclei object instance
+def calc_iso_ratio(n_obj,name_numerator,name_denominator):
+    num_isos=len(n_obj.list_isotopes)
+    j=0
+    numerator_index=99
+    denominator_index=99
+    # find the isotope with the names
+    while j<num_isos:
+        if name_numerator==n_obj.list_isotopes[j].name:
+            numerator_index=j
+        elif name_denominator==n_obj.list_isotopes[j].name:
+            denominator_index=j
+        j+=1
+    #print(f'numerator was {n_obj.list_isotopes[numerator_index].name} and denominator was {n_obj.list_isotopes[denominator_index].name}')
+    # add the isotope ratio to the nuclei obj
+
 def flux_ratio_versus_x(numerator_x,numerator_y,denominator_x,denominator_y,spline_steps):
     num_x=np.array(log_energy(numerator_x.copy()))
     den_x=np.array(log_energy(denominator_x.copy()))
@@ -205,10 +222,10 @@ class Nuclei:
         i=0
         while i<len(self.list_isotopes):
             if i==0: 
-                self.flux_energy_per_nucleon=np.array(self.list_isotopes[i].flux.copy())
+                self.flux_energy_per_nucleon=np.array(self.list_isotopes[i].flux_energy_per_nucleon.copy())
                 self.energy_per_nucleon=np.array(self.list_isotopes[i].energy_per_nucleon.copy())
             else:
-                self.flux_energy_per_nucleon+=np.array(self.list_isotopes[i].flux.copy())
+                self.flux_energy_per_nucleon+=np.array(self.list_isotopes[i].flux_energy_per_nucleon.copy())
             i+=1
     #        def find_total_flux(self):
     def calc_total_flux(self,num_steps):
@@ -230,10 +247,10 @@ class Nuclei:
             while i<len(self.list_isotopes):
                 #fluxes.append(log_energy(np.true_divide(self.list_isotopes[i].flux.copy(),
                                                         #self.list_isotopes[i].mass*(10**(-7)))))
-                fluxes.append(log_energy(self.list_isotopes[i].flux.copy()))
+                fluxes.append(log_energy(self.list_isotopes[i].flux_energy.copy())) #since its an isotope it wont matter here
                 rigidities.append(log_energy(self.list_isotopes[i].rigidity.copy()))
                 energies.append(log_energy(self.list_isotopes[i].energy.copy()))
-                fluxes_mod.append(log_energy(self.list_isotopes[i].flux_modulated.copy()))
+                fluxes_mod.append(log_energy(self.list_isotopes[i].flux_energy_modulated.copy())) # since its an isotope it wont matter here
                 rigidities_mod.append(log_energy(self.list_isotopes[i].rigidity_modulated.copy()))
                 energies_mod.append(log_energy(self.list_isotopes[i].energy_modulated.copy()))
                 energies_per_nuc_mod.append(log_energy(self.list_isotopes[i].energy_modulated_per_nucleon.copy()))
@@ -265,9 +282,21 @@ class Nuclei:
                 else:
                     self.flux_rigidity= self.flux_rigidity+np.array(flux_rtnr.copy())
                     self.flux_energy= self.flux_energy+np.array(flux_rtne.copy())
-                    self.flux_rigidity_modulated= self.flux_rigidity_modulated+np.array(flux_rtnr_mod.copy())                
+                    self.flux_rigidity_modulated= self.flux_rigidity_modulated+np.array(flux_rtnr_mod.copy())
                     self.flux_energy_modulated= self.flux_energy_modulated+np.array(flux_rtne_mod.copy())
-                    self.flux_energy_per_nucleon_modulated= self.flux_energy_per_nucleon_modulated+np.array(flux_rtnen_mod.copy())                
+                    self.flux_energy_per_nucleon_modulated= self.flux_energy_per_nucleon_modulated+np.array(flux_rtnen_mod.copy())
+                # save the interpolated stuff back into the isotope for use later # and notice the isotope flux_energy_per_nucleon and energy_per_nucleon will not change
+                self.list_isotopes[i].rigidity=np.array(undo_log_energy(rig_rtn.copy()))
+                self.list_isotopes[i].energy=np.array(undo_log_energy(ene_rtn.copy()))
+                self.list_isotopes[i].rigidity_modulated=np.array(undo_log_energy(rig_rtn_mod.copy()))
+                self.list_isotopes[i].energy_modulated=np.array(undo_log_energy(ene_rtn_mod.copy()))
+                self.list_isotopes[i].energy_per_nucleon_modulated=np.array(undo_log_energy(enen_rtn_mod.copy()))
+                # save fluxes of isotopes interpolated
+                self.list_isotopes[i].flux_energy=np.array(flux_rtne.copy())
+                self.list_isotopes[i].flux_rigidity=np.array(flux_rtnr.copy())
+                self.list_isotopes[i].flux_rigidity_modulated=np.array(flux_rtnr_mod.copy())
+                self.list_isotopes[i].flux_energy_modulated=np.array(flux_rtne_mod.copy())
+                self.list_isotopes[i].flux_energy_per_nucleon_modulated=np.array(flux_rtnen_mod.copy())
                 i+=1
             self.rigidity=np.array(undo_log_energy(rig_rtn.copy()))
             self.energy=np.array(undo_log_energy(ene_rtn.copy()))
@@ -284,13 +313,19 @@ class Nuclei:
             self.energy_per_nucleon = []    # creates a new empty list
             self.energy = []
             self.rigidity = []
-            self.flux = []
+            #self.flux = []
+            self.flux_energy_per_nucleon = []
+            self.flux_rigidity = []
+            self.flux_energy = []
             self.mass = mass
             self.charge = charge
             self.energy_modulated = []
             self.energy_modulated_per_nucleon = []
             self.rigidity_modulated = []
-            self.flux_modulated = []
+            #self.flux_modulated = []
+            self.flux_energy_per_nucleon_modulated = []
+            self.flux_rigidity_modulated = []
+            self.flux_energy_modulated = []
             self.phi = 0
             self.chi_square_val = 0
             self.chi_square_red = 0 
@@ -306,13 +341,16 @@ class Nuclei:
         def add_flux(self,flux_in):
             #correct the flux?
             mev_nuc=np.array(self.energy_per_nucleon.copy()*10**3)
-            self.flux=np.array(np.true_divide(flux_in,mev_nuc*mev_nuc*self.mass*(10**(-7))))
+            self.flux_energy_per_nucleon=np.array(np.true_divide(flux_in,mev_nuc*mev_nuc*self.mass*(10**(-7))))
+            self.flux_energy=self.flux_energy_per_nucleon.copy() # since its an isotope it doesnt matter
+            self.flux_rigidity=self.flux_energy_per_nucleon.copy() # since its an isotope it doesnt matter
             #fluxes.append(log_energy(np.true_divide(self.list_isotopes[i].flux.copy(),
                                       #self.list_isotopes[i].mass*(10**(-7)))))
         def add_modulation(self,solar):
             # once the fluxes+phi have been input then the modulation can occur as well, given a solar phi
             self.phi=solar
-            self.flux_modulated,self.energy_modulated=force_field_approx(self.flux.copy(),self.charge,self.mass,self.phi,self.energy.copy())
+            self.flux_energy_modulated,self.energy_modulated=force_field_approx(self.flux_energy.copy(),self.charge,self.mass,self.phi,self.energy.copy())
             self.energy_modulated_per_nucleon=np.array(self.energy_modulated.copy()/self.mass)
             self.rigidity_modulated=np.array(rigidity_calc(self.energy_modulated_per_nucleon.copy(),self.mass,self.charge))
-            
+            self.flux_energy_per_nucleon_modulated=self.flux_energy_modulated.copy()
+            self.flux_rigidity_modulated=self.flux_energy_modulated.copy()

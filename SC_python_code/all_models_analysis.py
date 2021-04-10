@@ -35,15 +35,16 @@ from open_tarfile import get_fluxes_from_files
 # Example function for testing this procedure before expanding to many ratios
 def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
     ########## FIRST THE DATA ##########
-    MAX_DIFFUSION=20
+    which_error=1
+    MAX_DIFFUSION=5
     numerator='B'  # numerator of the nuclei ratio used in the chi_square calculation (needs to also be AMS_DATA file first character)
     denominator='C'  # same as numerator but denominator for the nuclei ratio
     #num=BORON
-    B_C_df=load_ams_ratios('B','C',0) # one for each ratio that we want to compare to the galprop models, last arg is for error loaded (0=just stat, 1=sys+stat)
+    B_C_df=load_ams_ratios('B','C',which_error) # one for each ratio that we want to compare to the galprop models, last arg is for error loaded (0=just stat, 1=sys+stat)
     B_C_data_array_R=np.array(B_C_df.rigidity.values)
     B_C_data_array_ratio=np.array(B_C_df.ratio.values)
     B_C_data_array_ratio_errors=np.array(B_C_df.ratio_errors.values)
-    B_O_df=load_ams_ratios('B','O',1) # example of which error being 1 to give stats and sys added together
+    B_O_df=load_ams_ratios('B','O',which_error) # example of which error being 1 to give stats and sys added together
     #num=Be
     #Be_B_df=load_ams_ratios('Be','B')
     #Be_C_df=load_ams_ratios('Be','C')
@@ -91,7 +92,7 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
     spectral_index_nparray=np.empty([20,20]) # fitting to B/C ratio
     spectral_amplitude_nparray=np.empty([20,20]) # fitting to B/C ratio
     covariance_nparray=np.empty([20,20,2,2])
-    diffusion_number=1 #(set to [1,20])
+    diffusion_number=5 #(set to [1,20])
     while diffusion_number<MAX_DIFFUSION+1:
         chi_square_temp=[]  # reset this one at each iteration
         #first arg is not used currently for the following function (so it can be anything really)
@@ -116,6 +117,8 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
             b_obj=make_boron_nuclei("boron",5,energy,halo_model,solar_phi,num_spline_steps,fluxes_per_element_per_diffusion)
             c_obj=make_carbon_nuclei("carbon",6,energy,halo_model,solar_phi,num_spline_steps,fluxes_per_element_per_diffusion)
             o_obj=make_oxygen_nuclei("oxygen",8,energy,halo_model,solar_phi,num_spline_steps,fluxes_per_element_per_diffusion)
+            be_obj=make_beryllium_nuclei("beryllium",4,energy,halo_model,solar_phi,num_spline_steps,fluxes_per_element_per_diffusion)
+            calc_iso_ratio(be_obj,'Be-10','Be-9')
             B_C_ratio_obj=Ratio("Boron-Carbon Ratio")
             B_C_ratio_obj.add_nuclei(b_obj,c_obj,num_spline_steps)
             B_C_ratio_obj.fit_ratio(cutoff)
@@ -200,7 +203,7 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
     print(covariance_nparray)
     np.savetxt('spectralindexfits_-0.33nominal.txt', spectral_index_nparray, fmt='%f')
     np.savetxt('spectralamplitudesfits_-0.33nominal.txt', spectral_amplitude_nparray, fmt='%f')
-    np.savetxt('chisquare_cutoff_-0.33nominal.txt', chi_square_nparray, fmt='%f')
+    np.savetxt('chisquare_cutoff_-0.33nominal_error_'+str(which_error)+'.txt', chi_square_nparray, fmt='%f')
     #print(pvalue_nparray)
     #return chi_square_nparray, pvalue_nparray
     #return spectral_index_nparray,spectral_amplitude_nparray,covariance_nparray
