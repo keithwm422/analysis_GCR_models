@@ -328,9 +328,9 @@ class Nuclei:
         self.isotope_ratio_energy_per_nucleon_modulated=np.true_divide(self.list_isotopes[numerator_index].flux_energy_per_nucleon_modulated.copy(),
                                                                    self.list_isotopes[denominator_index].flux_energy_per_nucleon_modulated.copy())
     # this requires you to know about the data values passed. defaults should be rigidity units.
-    def analyze_ratio(self,data_x,data_y,data_error):
+    def analyze_flux(self,data_x,data_y,data_error):
         self.residuals, self.chi_square_val,self.chi_square_red=calculate_chi_squares(data_x,data_y,
-                                                       self.rigidity[self.rigidity>self.cutoff],self.ratio_rigidity[self.rigidity>self.cutoff],data_error)
+                                                       self.rigidity_modulated,self.flux_rigidity_modulated,data_error)
     def analyze_iso_ratio(self,data_x,data_y,data_error):
         self.iso_residuals,self.iso_chi_square_val,self.iso_chi_square_red=calculate_chi_squares(data_x,data_y,
                                                        self.list_isotopes[0].energy_per_nucleon_modulated.copy(),self.isotope_ratio_energy_per_nucleon_modulated.copy(),data_error)

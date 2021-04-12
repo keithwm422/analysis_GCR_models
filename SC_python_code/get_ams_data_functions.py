@@ -14,7 +14,7 @@ matplotlib.rc('text', usetex=True)
 import matplotlib.pyplot as plt
 import filepaths
 
-### Takes the dataframe and returns the different columns separately including the calculated central rigidity bin value.
+### Takes the dataframe and returns the different columns separately including the calculated central rigidity bin value. For ratios
 def make_energies_and_errors(df,num,den,tots_error):
     rigidity=np.array((df.R_low.values,df.R_high.values.T))
     rigidity_mp=(rigidity[0,:]+rigidity[1,:])/2.0
@@ -28,19 +28,50 @@ def make_energies_and_errors(df,num,den,tots_error):
         ratio_errors=np.sqrt(np.square(ratio_stat_errors)+np.square(ratio_sys_errors))
     return rigidity_mp,rigidity_binsize,ratio,ratio_errors
 
+### Takes the dataframe and returns the different columns separately including the calculated central rigidity bin value. For fluxes
+def make_flux_energies_and_errors(df,name,tots_error):
+    rigidity=np.array((df.R_low.values,df.R_high.values.T))
+    rigidity_mp=(rigidity[0,:]+rigidity[1,:])/2.0
+    rigidity_binsize=(rigidity[1,:]-rigidity[0,:])/2.0
+    flux_name='_'+str(name)+'_flux'
+    flux=np.array(df[flux_name].values)
+    flux_sys_errors=np.array(df._sys.values)
+    flux_stat_errors=np.array(df._stat.values)
+    flux_errors=flux_stat_errors.copy() # just use statistical errors since systematic errors have correlation over energy bins and those can't be used yet.
+    if tots_error==1:
+        flux_errors=np.sqrt(np.square(flux_stat_errors)+np.square(flux_sys_errors))
+    return rigidity_mp,rigidity_binsize,flux,flux_errors
+
 ### Load the data from a csv file into a Pandas DF ###
 def read_in_data(numerator,denominator):
     extension='ams_data.csv'
-    read_file=filepaths.data_path+numerator+'_'+denominator+'_'+extension
+    read_file=filepaths.data_path+"Ratios/"+numerator+'_'+denominator+'_'+extension
     ams=pd.read_csv(read_file)
     #print(ams.head())
     return ams
+### Load the data from a csv file into a Pandas DF ###
+def read_in_fluxdata(name):
+    extension='_flux_ams.csv'
+    read_file=filepaths.data_path+"fluxes/"+name+extension
+    ams=pd.read_csv(read_file)
+    #print(ams.head())
+    return ams
+
 # which error being 1 gives the quadrature of sys and stat, whereas any other value just gives you stat
 def load_ams_ratios(numerator,denominator,which_error):
     # lets try returning the flux ratios as a dataframe
     df=read_in_data(numerator,denominator)
     column_names=['rigidity','rigidity_binsize','ratio','ratio_errors']
     ams_data_formatted_df = pd.DataFrame(data=np.column_stack(make_energies_and_errors(df,numerator,denominator,which_error)),
+                   columns=column_names)
+    return ams_data_formatted_df
+
+# which error being 1 gives the quadrature of sys and stat, whereas any other value just gives you stat
+def load_ams_fluxes(name,which_error):
+    # lets try returning the flux ratios as a dataframe
+    df=read_in_fluxdata(name)
+    column_names=['rigidity','rigidity_binsize','flux','flux_errors']
+    ams_data_formatted_df = pd.DataFrame(data=np.column_stack(make_flux_energies_and_errors(df,name,which_error)),
                    columns=column_names)
     return ams_data_formatted_df
 
@@ -69,7 +100,7 @@ def load_pbarp_ams_ratio():
 def load_Be10_Be9_ratio():
 # lets try saving the fluxes per element as a dataframe?
     extension='.csv'
-    read_file=filepaths.data_path+'Be10_Be9_all'+extension
+    read_file=filepaths.data_path+"Ratios/"+'Be10_Be9_all'+extension
     multi_exp_df=pd.read_csv(read_file)
     #print(multi_exp_df.head())
     column_names=['experiment','kinetic','kinetic_binsize','ratio','ratio_errors']
@@ -159,10 +190,111 @@ def make_plot_of_data(df,numerator,denominator,log_show,which_error):
     #don't show on supercomputer
     #plt.show()
 
+
+### Plot the data and an example model and save to filepaths declared directory ###
+def make_plot_of_data_and_model(df,numerator,denominator,log_show,which_error,model_x,model_y, L,D):
+    fnt=20
+    x1=df.rigidity.values[0]-0.1
+    x2=1.5*df.rigidity.values[-1]
+    #y1=ratio[0]
+    #y2=5*10**-1
+    plt.figure(figsize=(10,10))
+    plt.errorbar(df.rigidity.values,df.ratio.values,xerr=df.rigidity_binsize.values,yerr=df.ratio_errors.values,fmt='o',label="AMS")
+    plt.plot(model_x,model_y,'r--',label="Model L="+str(L)+",D="+str(D))
+    plt.xscale("log")
+    plt.xlabel("Rigidity [GV]",fontsize=fnt)
+    plt.xticks(fontsize=fnt-4)
+    if log_show==1:
+        plt.yscale("log")
+    plt.ylabel("Flux division "+numerator+"/"+denominator,fontsize=fnt)
+    plt.yticks(fontsize=fnt-4)
+    plt.xlim([x1,x2])
+    #plt.ylim([y1,y2])
+    #plt.legend(loc='lower right', fontsize=fnt-4)
+    plt.legend(loc='upper right', fontsize=fnt)
+    plt.title("Example", fontsize=fnt)
+    if which_error==1:
+        plt.savefig(filepaths.images_path+numerator+"_"+denominator+"_totserror_ams_data_andmodel"+str(L)+"_"+str(D)+".png")
+    else:
+        plt.savefig(filepaths.images_path+numerator+"_"+denominator+"_ams_data_andmodel"+str(L)+"_"+str(D)+".png")
+    #don't show on supercomputer
+    #plt.show()
+
+### Plot the data and an example model and save to filepaths declared directory ###
+def make_plot_of_fluxdata_and_model(df,name,log_show,which_error,model_x,model_y, L,D):
+    fnt=24
+    x1=df.rigidity.values[0]-0.1
+    x2=1.5*df.rigidity.values[-1]
+    y2=1.5*df.flux.values[0]
+    y1=0.05*df.flux.values[-1]
+    #y1=ratio[0]
+    #y2=5*10**-1
+    plt.figure(figsize=(10,10))
+    plt.errorbar(df.rigidity.values,df.flux.values,xerr=df.rigidity_binsize.values,yerr=df.flux_errors.values,fmt='o',label="AMS")
+    plt.plot(model_x,model_y,'r--',label="Model L="+str(L)+",D="+str(D))
+    plt.xscale("log")
+    plt.xlabel("Rigidity [GV]",fontsize=fnt)
+    plt.xticks(fontsize=fnt-4)
+    if log_show==1:
+        plt.yscale("log")
+    plt.ylabel("Flux "r'm$^{-2}$ s$^{-1}$ sr$^{-1}$ GeV$^{-1}$',fontsize=fnt)
+    plt.yticks(fontsize=fnt-4)
+    plt.xlim([x1,x2])
+    plt.ylim([y1,y2])
+    #plt.legend(loc='lower right', fontsize=fnt-4)
+    plt.legend(loc='lower left', fontsize=fnt)
+    plt.title(name+" Flux", fontsize=fnt)
+    if which_error==1:
+        plt.savefig(filepaths.images_path+"_"+name+"_totserror_ams_data_andmodel"+str(L)+"_"+str(D)+".png")
+    else:
+        plt.savefig(filepaths.images_path+"_"+name+"_ams_data_andmodel"+str(L)+"_"+str(D)+".png")
+    #don't show on supercomputer
+    #plt.show()
+
+### Plot the data and an example model with subplots of the residuals and save to filepaths declared directory ###
+def make_plot_of_fluxdata_and_modelresiduals(df,name,log_show,which_error,model_x,model_y, residuals,L,D):
+    fnt=24
+    x1=df.rigidity.values[0]-0.1
+    x2=1.5*df.rigidity.values[-1]
+    gs_kw = dict(width_ratios=[1], height_ratios=[2,1])
+    y2=1.5*df.flux.values[0]
+    y1=0.05*df.flux.values[-1]
+    fig,ax=plt.subplots(figsize=(12, 18), dpi=400, nrows=2,sharex=True,gridspec_kw=gs_kw)
+    fig.subplots_adjust(hspace=0)
+    ax[0].errorbar(df.rigidity.values,df.flux.values,xerr=df.rigidity_binsize.values,yerr=df.flux_errors.values,fmt='o',color='black',label="AMS")
+    ax[0].plot(model_x,model_y,'r--',label="Model L="+str(L)+",D="+str(D))
+    ax[1].errorbar(df.rigidity.values,np.abs(residuals),yerr=df.flux_errors.values,fmt='o',color='black', label="Residuals")
+    ax[0].set_xscale("log")
+    ax[1].set_xscale("log")
+    ax[1].set_xlabel("Rigidity [GV]",fontsize=fnt)
+    ax[0].tick_params(labelsize=fnt-3)
+    ax[1].tick_params(labelsize=fnt-3)
+    #plt.xticks(fontsize=fnt-4)
+    if log_show==1:
+        ax[0].set_yscale("log")
+        ax[1].set_yscale("log")
+    ax[0].set_ylabel("Flux "r'm$^{-2}$ s$^{-1}$ sr$^{-1}$ GeV$^{-1}$',fontsize=fnt)
+    ax[0].set_xlim([x1,x2])
+    ax[1].set_xlim([x1,x2])
+    ax[1].set_ylim([10**-10,10**0])
+    ax[0].set_ylim([y1,y2])
+    #plt.ylim([y1,y2])
+    #plt.legend(loc='lower right', fontsize=fnt-4)
+    ax[0].legend(loc='upper right', fontsize=fnt)
+    ax[1].legend(loc='upper right', fontsize=fnt)
+    #plt.suptitle(name+" Flux", fontsize=fnt,y=0)
+    ax[0].set_title(name+" Flux", fontsize=fnt+2)
+    if which_error==1:
+        plt.savefig(filepaths.images_path+"_"+name+"_totserror_ams_data_andmodelresiduals"+str(L)+"_"+str(D)+".png")
+    else:
+        plt.savefig(filepaths.images_path+"_"+name+"_ams_data_andmodelresiduals"+str(L)+"_"+str(D)+".png")
+    #don't show on supercomputer
+    #plt.show()
+
 def load_H2_H1_ratio():
 # lets try saving the fluxes per element as a dataframe?
     extension='.csv'
-    read_file=filepaths.data_path+'H2_H1_pamela_voyager_data'+extension
+    read_file=filepaths.data_path+"Ratios/"+'H2_H1_pamela_voyager_data'+extension
     multi_exp_df=pd.read_csv(read_file)
     #print(multi_exp_df.head())
     column_names=['experiment','kinetic','kinetic_binsize','ratio','ratio_errors']
@@ -219,7 +351,7 @@ def make_plot_of_Hisotope_data(df,numerator,denominator,log_show):
 
 
 def load_He3_He4_ratio():
-    file_name=filepaths.data_path+'he_3_4_ams_data.csv'  
+    file_name=filepaths.data_path+"Ratios/"+'he_3_4_ams_data.csv'  
     ams=pd.read_csv(file_name)
     #print(ams.head())
     #join low and high together as one array to be used as x error bars
@@ -268,7 +400,7 @@ def make_plot_of_Heisotope_data(df,numerator,denominator,log_show):
 def load_B_C_ratio_voyager():
 # lets try saving the fluxes per element as a dataframe?
     extension='.csv'
-    read_file=filepaths.data_path+'B_C_test_unmodulated_voyager_ams'+extension
+    read_file=filepaths.data_path+"Ratios/"+'B_C_test_unmodulated_voyager_ams'+extension
     multi_exp_df=pd.read_csv(read_file)
     #print(multi_exp_df.head())
     column_names=['experiment','kinetic','kinetic_binsize','ratio','ratio_errors']

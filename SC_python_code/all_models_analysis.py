@@ -37,6 +37,7 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
     ########## FIRST THE DATA ##########
     which_error=1
     MAX_DIFFUSION=5
+    ### Loading Ratios ###
     numerator='B'  # numerator of the nuclei ratio used in the chi_square calculation (needs to also be AMS_DATA file first character)
     denominator='C'  # same as numerator but denominator for the nuclei ratio
     #num=BORON
@@ -69,6 +70,14 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
     He3_He4_data_array_K=np.array(He3_He4_df.kinetic.values.astype(float))
     He3_He4_data_array_ratio=np.array(He3_He4_df.ratio.values.astype(float))
     He3_He4_data_array_ratio_errors=np.array(He3_He4_df.ratio_errors.values.astype(float))
+    ### End loading ratios ###
+    ### Loading fluxes ###
+    Boron_flux_ams_df=load_ams_fluxes('Boron',which_error)
+    Boron_data_array_R=np.array(Boron_flux_ams_df.rigidity.values.astype(float)) # put them in np arrays to make everything consistent
+    Boron_data_array_flux=np.array(Boron_flux_ams_df.flux.values.astype(float))
+    Boron_data_array_flux_errors=np.array(Boron_flux_ams_df.flux_errors.values.astype(float))
+    print(Boron_flux_ams_df.head())
+    ### End loading fluxes ###
     #print(He3_He4_df.head())
     #B_C_voyager_df=load_B_C_ratio_voyager()
     #### DATA LOADED
@@ -79,7 +88,7 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
     #print(f'Num data points in AMS data: {len(ratio)}')
     #     IF YOU WANT TO PLOT JUST THE DATA run the code below  #
     #do you want y-axis log-scaled? (1=yes)
-    #log_y=1
+    log_y=1
     #make_plot_of_data(B_C_df,'B','C',log_y,0)
     #make_plot_of_data(B_O_df,'B','C',log_y,1)
     #make_plot_of_B_C_voyager_data(B_C_voyager_df,'B','C',log_show)
@@ -139,7 +148,8 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
             B_C_ratio_obj.fit_ratio(cutoff)
             # performs a chi-square and chi reduced analysis at the data points provided (cutoff imposed on the data if chosen).
             B_C_ratio_obj.analyze_ratio(B_C_data_array_R[B_C_data_array_R>cutoff],B_C_data_array_ratio[B_C_data_array_R>cutoff],B_C_data_array_ratio_errors[B_C_data_array_R>cutoff])
-            # nulcei ratio analysis args are in order (data_x,data_y, data_y_errors)
+            # isotope,nulcei flux, and ratio analysis args are in order (data_x,data_y, data_y_errors)
+            b_obj.analyze_flux(Boron_data_array_R,Boron_data_array_flux,Boron_data_array_flux_errors)
             # isotope ratio analysis will be similar
             # make sure isotope data is above the minimum energy in the model (so interpolating only not extrapolating)
             be_minimum=be_obj.list_isotopes[0].energy_per_nucleon_modulated[0]
@@ -202,6 +212,12 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
                 spectral_index_per_diffusion[halo_model-11]=spec_i
                 spectral_amplitude_per_diffusion[halo_model-11]=spec_A
                 covariance_per_diffusion[halo_model-11]=spec_cov                
+                # if you want to add a model and data to a plot to investigate, use the ones defined in get_ams py file
+                if halo_model-11==3:
+                    make_plot_of_data_and_model(B_O_df,'B','C',log_y,which_error,B_C_ratio_obj.rigidity_modulated,B_C_ratio_obj.ratio_rigidity_modulated,4,5)
+                    make_plot_of_fluxdata_and_model(Boron_flux_ams_df,'Boron',log_y,which_error,b_obj.rigidity_modulated,b_obj.flux_rigidity_modulated,4,5)
+                    make_plot_of_fluxdata_and_modelresiduals(Boron_flux_ams_df,'Boron',log_y,which_error,b_obj.rigidity_modulated,b_obj.flux_rigidity_modulated,b_obj.residuals,4,5)
+                    #print(f'residuals: {b_obj.residuals}')
                 #ratios_splined_per_diffusion[halo_model-11]=B_C_ratio_spline
                 #stats_per_diffusion[halo_model-11]=stats_obj
                 #stats_masked_per_diffusion[halo_model-11]=stats_obj_masked
