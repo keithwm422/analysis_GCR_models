@@ -72,6 +72,16 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
     He3_He4_data_array_ratio_errors=np.array(He3_He4_df.ratio_errors.values.astype(float))
     ### End loading ratios ###
     ### Loading fluxes ###
+    Helium_flux_ams_df=load_ams_fluxes('Helium',which_error)
+    Helium_data_array_R=np.array(Helium_flux_ams_df.rigidity.values.astype(float)) # put them in np arrays to make everything consistent
+    Helium_data_array_flux=np.array(Helium_flux_ams_df.flux.values.astype(float))
+    Helium_data_array_flux_errors=np.array(Helium_flux_ams_df.flux_errors.values.astype(float))
+    #print(stufff)
+    Lithium_flux_ams_df=load_ams_fluxes('Lithium',which_error)
+    Lithium_data_array_R=np.array(Lithium_flux_ams_df.rigidity.values.astype(float)) # put them in np arrays to make everything consistent
+    Lithium_data_array_flux=np.array(Lithium_flux_ams_df.flux.values.astype(float))
+    Lithium_data_array_flux_errors=np.array(Lithium_flux_ams_df.flux_errors.values.astype(float))
+    #print(stufff)
     Boron_flux_ams_df=load_ams_fluxes('Boron',which_error)
     Boron_data_array_R=np.array(Boron_flux_ams_df.rigidity.values.astype(float)) # put them in np arrays to make everything consistent
     Boron_data_array_flux=np.array(Boron_flux_ams_df.flux.values.astype(float))
@@ -116,6 +126,7 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
     #chi_square_array=[] # in the end this is a list of the models that is arbitrary dimensional
     chi_square_nparray=np.empty([20,20]) # this is what we expect the chi_square_array to be if all goes well, where each value is the chi_square on a grid of halo size vs diffusion coeff
     chi_square_nparray_be=np.empty([20,20]) # this is what we expect the chi_square_array to be if all goes well, where each value is the chi_square on a grid of halo size vs diffusion coeff
+    chi_square_nparray_he=np.empty([20,20])
     pvalue_nparray=np.empty([20,20]) # this is what we expect the chi_square_array to be if all goes well, where each value is the chi_square on a grid of halo size vs diffusion coeff
     model_name_full=np.empty([20,20],dtype="S10")
     stats_full=np.empty([20,20,2]) # the stats object is a scipy chiqsuare object which has two components a chisquare and a pvalue
@@ -139,6 +150,7 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
         model_name=np.empty([20,],dtype="S10")
         chi_square_array_per_diffusion=np.empty([20,])
         chi_square_array_per_diffusion_be=np.empty([20,])
+        chi_square_array_per_diffusion_he=np.empty([20,])
         pvalue_array_per_diffusion=np.empty([20,])
         stats_per_diffusion=np.empty([20,2]) # the stats object is a scipy chiqsuare object which has two components a chisquare and a pvalue
         stats_per_diffusion_reduced=np.empty([20,2]) # the stats object is a scipy chiqsuare object which has two components a chisquare and a pvalue
@@ -151,6 +163,9 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
             c_obj=make_carbon_nuclei("Carbon",6,energy,halo_model,solar_phi,num_spline_steps,fluxes_per_element_per_diffusion)
             o_obj=make_oxygen_nuclei("Oxygen",8,energy,halo_model,solar_phi,num_spline_steps,fluxes_per_element_per_diffusion)
             be_obj=make_beryllium_nuclei("Beryllium",4,energy,halo_model,solar_phi,num_spline_steps,fluxes_per_element_per_diffusion)
+            li_obj=make_lithium_nuclei("Lithium",3,energy,halo_model,solar_phi,num_spline_steps,fluxes_per_element_per_diffusion)
+            he_obj=make_helium_nuclei("Helium",2,energy,halo_model,solar_phi,num_spline_steps,fluxes_per_element_per_diffusion)
+            h_obj=make_hydrogen_nuclei("Hydrogen",1,energy,halo_model,solar_phi,num_spline_steps,fluxes_per_element_per_diffusion)
             # actually make a nuclei ratio with the numerator and denominator passed as nuclei objects
             B_C_ratio_obj=Ratio("Boron-Carbon Ratio")
             B_C_ratio_obj.add_nuclei(b_obj,c_obj,num_spline_steps)
@@ -159,16 +174,23 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
             # performs a chi-square and chi reduced analysis at the data points provided (cutoff imposed on the data if chosen).
             B_C_ratio_obj.analyze_ratio(B_C_data_array_R[B_C_data_array_R>cutoff],B_C_data_array_ratio[B_C_data_array_R>cutoff],B_C_data_array_ratio_errors[B_C_data_array_R>cutoff])
             # isotope,nulcei flux, and ratio analysis args are in order (data_x,data_y, data_y_errors)
+            he_obj.analyze_flux(Helium_data_array_R,Helium_data_array_flux,Helium_data_array_flux_errors)
+            li_obj.analyze_flux(Lithium_data_array_R,Lithium_data_array_flux,Lithium_data_array_flux_errors)
             b_obj.analyze_flux(Boron_data_array_R,Boron_data_array_flux,Boron_data_array_flux_errors)
             c_obj.analyze_flux(Carbon_data_array_R,Carbon_data_array_flux,Carbon_data_array_flux_errors)
             o_obj.analyze_flux(Oxygen_data_array_R,Oxygen_data_array_flux,Oxygen_data_array_flux_errors)
             # isotope ratio analysis will be similar
             # make sure isotope data is above the minimum energy in the model (so interpolating only not extrapolating)
             be_minimum=be_obj.list_isotopes[0].energy_per_nucleon_modulated[0]
-            be_obj.analyze_iso_ratio(Be10_Be9_data_array_K[Be10_Be9_data_array_K>be_minimum],Be10_Be9_data_array_ratio[Be10_Be9_data_array_K>be_minimum],Be10_Be9_data_array_ratio_errors[Be10_Be9_data_array_K>be_minimum])
+            be_obj.analyze_iso_ratio(Be10_Be9_data_array_K[Be10_Be9_data_array_K>be_minimum],
+                                     Be10_Be9_data_array_ratio[Be10_Be9_data_array_K>be_minimum],Be10_Be9_data_array_ratio_errors[Be10_Be9_data_array_K>be_minimum])
+            he_minimum=he_obj.list_isotopes[0].energy_per_nucleon_modulated[0]
+            he_obj.analyze_iso_ratio(He3_He4_data_array_K[He3_He4_data_array_K>he_minimum],
+                                    He3_He4_data_array_ratio[He3_He4_data_array_K>he_minimum],He3_He4_data_array_ratio_errors[He3_He4_data_array_K>he_minimum])
             # get the chi square from analysis
             chi_square=B_C_ratio_obj.chi_square_val
             chi_square_be=be_obj.iso_chi_square_val
+            chi_square_he=he_obj.iso_chi_square_val
             # get the best fit from scipy optimize curvefit
             spec_i=B_C_ratio_obj.spectral_index
             spec_A=B_C_ratio_obj.spectral_amplitude
@@ -180,6 +202,7 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
             if halo_model<=9: #this is L=10 so set it 9th position in array, ==1 L=11 set it to 10 pos in array... j==9 L=19 set it to 18 pos in array
                 chi_square_array_per_diffusion[halo_model+9]=chi_square
                 chi_square_array_per_diffusion_be[halo_model+9]=chi_square_be
+                chi_square_array_per_diffusion_he[halo_model+9]=chi_square_he
                 #chi_square_array_per_diffusion[halo_model+9]=chi_reduced
                 #pvalue_array_per_diffusion[halo_model+9]=p_value
                 model_name[halo_model+9]=fluxes_per_element_per_diffusion[halo_model][-1]
@@ -194,6 +217,7 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
                           #B_C_ratio_obj.ratio_energy_per_nucleon,B_C_ratio_obj.ratio_energy_per_nucleon_modulated)
                 chi_square_array_per_diffusion[0]=chi_square
                 chi_square_array_per_diffusion_be[0]=chi_square_be
+                chi_square_array_per_diffusion_he[0]=chi_square_he
                 #chi_square_array_per_diffusion[0]=chi_reduced
                 #pvalue_array_per_diffusion[0]=p_value
                 model_name[0]=fluxes_per_element_per_diffusion[halo_model][-1]
@@ -206,6 +230,7 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
             elif halo_model==11: #this is L=20 so set it to last pos
                 chi_square_array_per_diffusion[19]=chi_square
                 chi_square_array_per_diffusion_be[19]=chi_square_be
+                chi_square_array_per_diffusion_he[19]=chi_square_he
                 #chi_square_array_per_diffusion[19]=chi_reduced
                 #pvalue_array_per_diffusion[19]=p_value
                 model_name[19]=fluxes_per_element_per_diffusion[halo_model][-1]
@@ -218,6 +243,7 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
             elif halo_model>=12:  # these are j>=12 where j==12 is L=2 so set to 1 pos in array, j==13 set it 2 in array
                 chi_square_array_per_diffusion[halo_model-11]=chi_square
                 chi_square_array_per_diffusion_be[halo_model-11]=chi_square_be
+                chi_square_array_per_diffusion_he[halo_model-11]=chi_square_he
                 #chi_square_array_per_diffusion[halo_model-11]=chi_reduced
                 #pvalue_array_per_diffusion[halo_model-11]=p_value
                 model_name[halo_model-11]=fluxes_per_element_per_diffusion[halo_model][-1]
@@ -241,6 +267,7 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
             halo_model+=1
         chi_square_nparray[diffusion_number-1]=chi_square_array_per_diffusion
         chi_square_nparray_be[diffusion_number-1]=chi_square_array_per_diffusion_be
+        chi_square_nparray_he[diffusion_number-1]=chi_square_array_per_diffusion_he
         #pvalue_nparray[diffusion_number-1]=pvalue_array_per_diffusion
         #chi_square_array.append(chi_square_array_per_diffusion)
         model_name_full[diffusion_number-1]=model_name
@@ -257,6 +284,7 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
     #return chi_square_array,chi_square_nparray,model_name_full,stats_full,stats_masked_full
     print(chi_square_nparray)
     print(chi_square_nparray_be)
+    print(chi_square_nparray_he)
     #print(chi_square_nparray)
     #print(spectral_index_nparray)
     #print(spectral_amplitude_nparray)
@@ -265,6 +293,7 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
     np.savetxt('spectralamplitudesfits_-0.33nominal.txt', spectral_amplitude_nparray, fmt='%f')
     np.savetxt('chisquare_cutoff_-0.33nominal_error_'+str(which_error)+'.txt', chi_square_nparray, fmt='%f')
     np.savetxt('chisquare_cutoff_-0.33nominal_error_'+str(which_error)+'be.txt', chi_square_nparray_be, fmt='%f')
+    np.savetxt('chisquare_cutoff_-0.33nominal_error_'+str(which_error)+'he.txt', chi_square_nparray_he, fmt='%f')
     #print(pvalue_nparray)
     #return chi_square_nparray, pvalue_nparray
     #return spectral_index_nparray,spectral_amplitude_nparray,covariance_nparray

@@ -100,6 +100,72 @@ def make_beryllium_nuclei(name,charge,energy_per_nuc,model,solar_phi,spline_step
     n_obj.calc_iso_ratio('Be-10','Be-9')
     return n_obj
 
+def make_lithium_nuclei(name,charge,energy_per_nuc,model,solar_phi,spline_steps,fluxes_per_element_full):
+    n_obj=Nuclei(name,charge)
+    n_obj.add_isotopes('Li-6',6,charge)
+    n_obj.add_isotopes('Li-7',7,charge)
+    j=0
+    #print(len(n_obj.list_isotopes))
+    while j< len(n_obj.list_isotopes):
+        n_obj.list_isotopes[j].add_energy_per_nucleon(energy_per_nuc.copy())
+        #print(cosmic_ray_nuclei_index.boron_list[j])
+        #print(j)
+        n_obj.list_isotopes[j].add_flux(np.array(fluxes_per_element_full[model][
+            cosmic_ray_nuclei_index.element_index.index(cosmic_ray_nuclei_index.lithium_list[j])].copy()))
+        n_obj.list_isotopes[j].add_modulation(solar_phi)
+        j+=1
+    #print(n_obj.list_isotopes[-1].flux)
+    n_obj.add_isotope_fluxes()
+    n_obj.calc_total_flux(spline_steps)
+    n_obj.calc_iso_ratio('Li-7','Li-6')
+    return n_obj
+
+def make_helium_nuclei(name,charge,energy_per_nuc,model,solar_phi,spline_steps,fluxes_per_element_full):
+    n_obj=Nuclei(name,charge)
+    n_obj.add_isotopes('He-3',3,charge)
+    n_obj.add_isotopes('He-4',4,charge)
+    j=0
+    #print(len(n_obj.list_isotopes))
+    while j< len(n_obj.list_isotopes):
+        n_obj.list_isotopes[j].add_energy_per_nucleon(energy_per_nuc.copy())
+        #print(cosmic_ray_nuclei_index.boron_list[j])
+        #print(j)
+        n_obj.list_isotopes[j].add_flux(np.array(fluxes_per_element_full[model][
+            cosmic_ray_nuclei_index.element_index.index(cosmic_ray_nuclei_index.helium_list[j])].copy()))
+        n_obj.list_isotopes[j].add_modulation(solar_phi)
+        j+=1
+    #print(n_obj.list_isotopes[-1].flux)
+    n_obj.add_isotope_fluxes()
+    n_obj.calc_total_flux(spline_steps)
+    n_obj.calc_iso_ratio('He-3','He-4')
+    return n_obj
+
+def make_hydrogen_nuclei(name,charge,energy_per_nuc,model,solar_phi,spline_steps,fluxes_per_element_full):
+    n_obj=Nuclei(name,charge)
+    n_obj.add_isotopes('H-1',1,charge)
+    #n_obj.add_isotopes('H-s',9,charge)
+    n_obj.add_isotopes('H-2',2,charge)
+    # this one is easier to write out entirely
+    n_obj.list_isotopes[0].add_energy_per_nucleon(energy_per_nuc.copy())
+    # primary and secondary protons added together
+    n_obj.list_isotopes[0].add_flux(np.array(fluxes_per_element_full[model][
+                cosmic_ray_nuclei_index.element_index.index(cosmic_ray_nuclei_index.proton_list[0])].copy())+
+                                    np.array(fluxes_per_element_full[model][
+                cosmic_ray_nuclei_index.element_index.index(cosmic_ray_nuclei_index.proton_list[1])].copy()))
+    # phew
+    n_obj.list_isotopes[0].add_modulation(solar_phi)
+    # now deuterium
+    n_obj.list_isotopes[1].add_energy_per_nucleon(energy_per_nuc.copy())
+    n_obj.list_isotopes[1].add_flux(np.array(fluxes_per_element_full[model][
+                cosmic_ray_nuclei_index.element_index.index(cosmic_ray_nuclei_index.proton_list[2])].copy()))
+    n_obj.list_isotopes[1].add_modulation(solar_phi)
+    #print(n_obj.list_isotopes[-1].flux)
+    n_obj.add_isotope_fluxes()
+    n_obj.calc_total_flux(spline_steps)
+    n_obj.calc_iso_ratio('H-2','H-1')
+    #n_obj.calc_iso_ratio_dual('H-2','H-p','H-s')  //probably harder to code lets look at alternatives
+    return n_obj
+
 # TRY THE FORCE_FIELD
 #try the force-field approx
 #companion function, EK is a column array
@@ -109,6 +175,8 @@ def force_field_factor(Z,A,phi,EK):
     #print(PHI)
     EK_shifted=EK.copy()
     EK_shifted=EK_shifted-PHI
+    #if np.any(EK_shifted <= 0):
+    #    print("NO ITS NEGATIVE ENERGY")
     EK_sum=EK_shifted.copy()+2*A*proton_mass
     EK_num=EK_shifted*EK_sum
     EK_orig=EK.copy()
@@ -122,7 +190,11 @@ def force_field_factor(Z,A,phi,EK):
 #EK in GeV (not per nucleon!)
 def force_field_approx(LIS,Z,A,phi,EK):
     factor,EK_shifted=force_field_factor(Z,A,phi,EK)
-    return LIS*(factor),EK_shifted
+    new_spectra=LIS*(factor)
+    if np.any(EK_shifted < 0):
+        return new_spectra[EK_shifted>0],EK_shifted[EK_shifted>0] # only those flux and ek that are greater than 0
+    else:
+        return new_spectra,EK_shifted
 
 def rigidity_power_law(R, A, GAMMA):
     return A * (R)**(GAMMA)
