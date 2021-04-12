@@ -193,7 +193,7 @@ def make_plot_of_data(df,numerator,denominator,log_show,which_error):
 
 ### Plot the data and an example model and save to filepaths declared directory ###
 def make_plot_of_data_and_model(df,numerator,denominator,log_show,which_error,model_x,model_y, L,D):
-    fnt=20
+    fnt=24
     x1=df.rigidity.values[0]-0.1
     x2=1.5*df.rigidity.values[-1]
     #y1=ratio[0]
@@ -212,7 +212,7 @@ def make_plot_of_data_and_model(df,numerator,denominator,log_show,which_error,mo
     #plt.ylim([y1,y2])
     #plt.legend(loc='lower right', fontsize=fnt-4)
     plt.legend(loc='upper right', fontsize=fnt)
-    plt.title("Example", fontsize=fnt)
+    plt.title("B/C model and data", fontsize=fnt)
     if which_error==1:
         plt.savefig(filepaths.images_path+numerator+"_"+denominator+"_totserror_ams_data_andmodel"+str(L)+"_"+str(D)+".png")
     else:
@@ -220,10 +220,51 @@ def make_plot_of_data_and_model(df,numerator,denominator,log_show,which_error,mo
     #don't show on supercomputer
     #plt.show()
 
+### Plot the ratio data and an example model with residuals and save to filepaths declared directory ###
+def make_plot_of_data_and_modelresiduals(df,residuals,numerator,denominator,log_show,which_error,model_x,model_y, L,D,cutoff):
+    fnt=24
+    x1=df.rigidity.values[0]-0.1
+    x2=1.5*df.rigidity.values[-1]
+    y1=0.4
+    y2=2*10**-2
+    gs_kw = dict(width_ratios=[1], height_ratios=[2,1])
+    #y2=1.5*df.flux.values[0]
+    #y1=0.05*df.flux.values[-1]
+    fig,ax=plt.subplots(figsize=(12, 18), dpi=400, nrows=2,sharex=True,gridspec_kw=gs_kw)
+    fig.subplots_adjust(hspace=0)
+    ax[0].errorbar(df.rigidity.values,df.ratio.values,xerr=df.rigidity_binsize.values,yerr=df.ratio_errors.values,fmt='o',label="AMS")
+    ax[0].plot(model_x,model_y,'r--',label="Model L="+str(L)+",D="+str(D))
+    ax[1].errorbar(df.rigidity.values[df.rigidity.values>cutoff],np.abs(residuals),yerr=df.ratio_errors.values[df.rigidity.values>cutoff],fmt='o',color='black', label="Residuals")
+    ax[0].set_xscale("log")
+    ax[1].set_xlabel("Rigidity [GV]",fontsize=fnt)
+    ax[0].tick_params(labelsize=fnt-3)
+    ax[1].tick_params(labelsize=fnt-3)
+    ax[0].tick_params(which='both',width=2, length=7)
+    ax[1].tick_params(which='minor',width=1.2, length=4)
+    if log_show==1:
+        ax[0].set_yscale("log")
+        #ax[1].set_yscale("log")
+    ax[0].set_ylabel("Flux division "+numerator+"/"+denominator,fontsize=fnt)
+    ax[0].set_xlim([x1,x2])
+    ax[1].set_xlim([x1,x2])
+    ax[0].set_ylim([y2,y1])
+    ax[1].set_ylim([-0.02,0.02])
+    #plt.ylim([y1,y2])
+    #plt.legend(loc='lower right', fontsize=fnt-4)
+    ax[0].legend(loc='upper right', fontsize=fnt)
+    ax[1].legend(loc='lower left', fontsize=fnt)
+    ax[0].set_title("B/C model and data", fontsize=fnt)
+    if which_error==1:
+        plt.savefig(filepaths.images_path+numerator+"_"+denominator+"_totserror_ams_data_andmodelresiduals_"+str(L)+"_"+str(D)+".png")
+    else:
+        plt.savefig(filepaths.images_path+numerator+"_"+denominator+"_ams_data_andmodelresiduals_"+str(L)+"_"+str(D)+".png")
+    #don't show on supercomputer
+    #plt.show()
+
 ### Plot the data and an example model and save to filepaths declared directory ###
 def make_plot_of_fluxdata_and_model(df,name,log_show,which_error,model_x,model_y, L,D):
     fnt=24
-    x1=df.rigidity.values[0]-0.1
+    x1=0.5*df.rigidity.values[0]
     x2=1.5*df.rigidity.values[-1]
     y2=1.5*df.flux.values[0]
     y1=0.05*df.flux.values[-1]
@@ -254,7 +295,7 @@ def make_plot_of_fluxdata_and_model(df,name,log_show,which_error,model_x,model_y
 ### Plot the data and an example model with subplots of the residuals and save to filepaths declared directory ###
 def make_plot_of_fluxdata_and_modelresiduals(df,name,log_show,which_error,model_x,model_y, residuals,L,D):
     fnt=24
-    x1=df.rigidity.values[0]-0.1
+    x1=0.5*df.rigidity.values[0]
     x2=1.5*df.rigidity.values[-1]
     gs_kw = dict(width_ratios=[1], height_ratios=[2,1])
     y2=1.5*df.flux.values[0]
@@ -446,3 +487,74 @@ def make_plot_of_B_C_voyager_data(df,numerator,denominator,log_show):
     plt.savefig(filepaths.images_path+numerator+"_"+denominator+"_voyager_data.png")
     #don't show on supercomputer
     #plt.show()
+
+
+def make_residual_histogram(numerator,denominator,which_error,residuals,chi,L,D):
+    fnt=24
+    n_bins=20
+    range_bins=[-0.02,0.02]
+    #x1=df.rigidity.values[0]-0.1
+    #x2=1.5*df.rigidity.values[-1]
+    #y1=ratio[0]
+    #y2=5*10**-1
+    plt.figure(figsize=(12,12))
+    bin_heights, bin_borders,_last_ = plt.hist(residuals,bins=n_bins, range=range_bins,histtype='step',linewidth=3)
+    #plt.xscale("log")
+    plt.xlabel("Residual",fontsize=fnt)
+    plt.xticks(fontsize=fnt-4)
+    #if log_show==1:
+    #   plt.yscale("log")
+    #plt.ylabel("Flux division "+numerator+"/"+denominator,fontsize=fnt)
+    plt.yticks(fontsize=fnt-4)
+    #plt.xlim([x1,x2])
+    #plt.ylim([y1,y2])
+    #plt.legend(loc='lower right', fontsize=fnt-4)
+    #plt.legend(loc='upper right', fontsize=fnt)
+    plt.title(f'{numerator}/{denominator} Model L='+str(L)+",D="+str(D), fontsize=fnt)
+    plt.text(-0.015,5,s=r"$\chi ^{2}=$"+str(round(chi,3)),size=20,bbox=dict(boxstyle="round",
+                  ec=(1., 0.5, 0.5),
+                  fc=(1., 0.8, 0.8),
+                  ))
+    if which_error==1:
+        plt.savefig(filepaths.images_path+numerator+"_"+denominator+"_totserror_residual"+str(L)+"_"+str(D)+".png")
+    else:
+        plt.savefig(filepaths.images_path+numerator+"_"+denominator+"_residual"+str(L)+"_"+str(D)+".png")
+    #don't show on supercomputer
+    #plt.show()
+
+### Plot the data and an example model and save to filepaths declared directory ###
+### Order matters, B,C,O preferrably
+def make_plot_of_multifluxdata_and_model(df1,name1,df2,name2,df3,name3,log_show,which_error,n_obj1,n_obj2,n_obj3,L,D):
+    fnt=24
+    x1=0.5*df1.rigidity.values[0]
+    x2=1.5*df3.rigidity.values[-1]
+    y2=1.5*df3.flux.values[0]
+    y1=0.05*df1.flux.values[-1]
+    #y1=ratio[0]
+    #y2=5*10**-1
+    plt.figure(figsize=(10,10))
+    plt.errorbar(df1.rigidity.values,df1.flux.values,xerr=df1.rigidity_binsize.values,yerr=df1.flux_errors.values,fmt='o',label=name1+", AMS")
+    plt.errorbar(df2.rigidity.values,df2.flux.values,xerr=df2.rigidity_binsize.values,yerr=df2.flux_errors.values,fmt='o',label=name2+", AMS")
+    plt.errorbar(df3.rigidity.values,df3.flux.values,xerr=df3.rigidity_binsize.values,yerr=df3.flux_errors.values,fmt='o',label=name3+", AMS")
+    plt.plot(n_obj1.rigidity_modulated,n_obj1.flux_rigidity_modulated,'b--',label=n_obj1.name+", Model")
+    plt.plot(n_obj2.rigidity_modulated,n_obj2.flux_rigidity_modulated,'y--',label=n_obj2.name+", Model")
+    plt.plot(n_obj3.rigidity_modulated,n_obj3.flux_rigidity_modulated,'g--',label=n_obj3.name+", Model")
+    plt.xscale("log")
+    plt.xlabel("Rigidity [GV]",fontsize=fnt)
+    plt.xticks(fontsize=fnt-4)
+    if log_show==1:
+        plt.yscale("log")
+    plt.ylabel("Flux "r'm$^{-2}$ s$^{-1}$ sr$^{-1}$ GeV$^{-1}$',fontsize=fnt)
+    plt.yticks(fontsize=fnt-4)
+    plt.xlim([x1,x2])
+    plt.ylim([y1,y2])
+    #plt.legend(loc='lower right', fontsize=fnt-4)
+    plt.legend(loc='lower left', fontsize=fnt)
+    plt.title("Spectra of Cosmic Ray Nuclei with Model L="+str(L)+",D="+str(D), fontsize=fnt)
+    if which_error==1:
+        plt.savefig(filepaths.images_path+"_multi_"+name1+"_"+name2+"_"+name3+"_totserror_ams_data_andmodel"+str(L)+"_"+str(D)+".png")
+    else:
+        plt.savefig(filepaths.images_path+"_multi_"+name1+"_"+name2+"_"+name3+"_ams_data_andmodel"+str(L)+"_"+str(D)+".png")
+    #don't show on supercomputer
+    #plt.show()
+

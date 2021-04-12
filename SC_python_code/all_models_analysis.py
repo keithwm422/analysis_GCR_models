@@ -76,7 +76,17 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
     Boron_data_array_R=np.array(Boron_flux_ams_df.rigidity.values.astype(float)) # put them in np arrays to make everything consistent
     Boron_data_array_flux=np.array(Boron_flux_ams_df.flux.values.astype(float))
     Boron_data_array_flux_errors=np.array(Boron_flux_ams_df.flux_errors.values.astype(float))
-    print(Boron_flux_ams_df.head())
+    #print(Boron_flux_ams_df.head())
+    Carbon_flux_ams_df=load_ams_fluxes('Carbon',which_error)
+    Carbon_data_array_R=np.array(Carbon_flux_ams_df.rigidity.values.astype(float)) # put them in np arrays to make everything consistent
+    Carbon_data_array_flux=np.array(Carbon_flux_ams_df.flux.values.astype(float))
+    Carbon_data_array_flux_errors=np.array(Carbon_flux_ams_df.flux_errors.values.astype(float))
+    #print(Boron_flux_ams_df.head())
+    Oxygen_flux_ams_df=load_ams_fluxes('Oxygen',which_error)
+    Oxygen_data_array_R=np.array(Oxygen_flux_ams_df.rigidity.values.astype(float)) # put them in np arrays to make everything consistent
+    Oxygen_data_array_flux=np.array(Oxygen_flux_ams_df.flux.values.astype(float))
+    Oxygen_data_array_flux_errors=np.array(Oxygen_flux_ams_df.flux_errors.values.astype(float))
+    #print(Boron_flux_ams_df.head())
     ### End loading fluxes ###
     #print(He3_He4_df.head())
     #B_C_voyager_df=load_B_C_ratio_voyager()
@@ -137,10 +147,10 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
         covariance_per_diffusion=np.empty([20,2,2])
         while halo_model<20:
             # to get a nuclei ratio, need nuclei fluxes. these are classes too. after a nuclei is made, if it had been hardcoded for an isotope ratio, this will be saved as well
-            b_obj=make_boron_nuclei("boron",5,energy,halo_model,solar_phi,num_spline_steps,fluxes_per_element_per_diffusion)
-            c_obj=make_carbon_nuclei("carbon",6,energy,halo_model,solar_phi,num_spline_steps,fluxes_per_element_per_diffusion)
-            o_obj=make_oxygen_nuclei("oxygen",8,energy,halo_model,solar_phi,num_spline_steps,fluxes_per_element_per_diffusion)
-            be_obj=make_beryllium_nuclei("beryllium",4,energy,halo_model,solar_phi,num_spline_steps,fluxes_per_element_per_diffusion)
+            b_obj=make_boron_nuclei("Boron",5,energy,halo_model,solar_phi,num_spline_steps,fluxes_per_element_per_diffusion)
+            c_obj=make_carbon_nuclei("Carbon",6,energy,halo_model,solar_phi,num_spline_steps,fluxes_per_element_per_diffusion)
+            o_obj=make_oxygen_nuclei("Oxygen",8,energy,halo_model,solar_phi,num_spline_steps,fluxes_per_element_per_diffusion)
+            be_obj=make_beryllium_nuclei("Beryllium",4,energy,halo_model,solar_phi,num_spline_steps,fluxes_per_element_per_diffusion)
             # actually make a nuclei ratio with the numerator and denominator passed as nuclei objects
             B_C_ratio_obj=Ratio("Boron-Carbon Ratio")
             B_C_ratio_obj.add_nuclei(b_obj,c_obj,num_spline_steps)
@@ -150,6 +160,8 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
             B_C_ratio_obj.analyze_ratio(B_C_data_array_R[B_C_data_array_R>cutoff],B_C_data_array_ratio[B_C_data_array_R>cutoff],B_C_data_array_ratio_errors[B_C_data_array_R>cutoff])
             # isotope,nulcei flux, and ratio analysis args are in order (data_x,data_y, data_y_errors)
             b_obj.analyze_flux(Boron_data_array_R,Boron_data_array_flux,Boron_data_array_flux_errors)
+            c_obj.analyze_flux(Carbon_data_array_R,Carbon_data_array_flux,Carbon_data_array_flux_errors)
+            o_obj.analyze_flux(Oxygen_data_array_R,Oxygen_data_array_flux,Oxygen_data_array_flux_errors)
             # isotope ratio analysis will be similar
             # make sure isotope data is above the minimum energy in the model (so interpolating only not extrapolating)
             be_minimum=be_obj.list_isotopes[0].energy_per_nucleon_modulated[0]
@@ -214,9 +226,13 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
                 covariance_per_diffusion[halo_model-11]=spec_cov                
                 # if you want to add a model and data to a plot to investigate, use the ones defined in get_ams py file
                 if halo_model-11==3:
-                    make_plot_of_data_and_model(B_O_df,'B','C',log_y,which_error,B_C_ratio_obj.rigidity_modulated,B_C_ratio_obj.ratio_rigidity_modulated,4,5)
+                    make_plot_of_data_and_model(B_C_df,'B','C',log_y,which_error,B_C_ratio_obj.rigidity_modulated,B_C_ratio_obj.ratio_rigidity_modulated,4,5)
+                    make_plot_of_data_and_modelresiduals(B_C_df,B_C_ratio_obj.residuals,'B','C',log_y,which_error,B_C_ratio_obj.rigidity_modulated,
+                                                         B_C_ratio_obj.ratio_rigidity_modulated,4,5,cutoff)
+                    make_residual_histogram('B','C',which_error,B_C_ratio_obj.residuals,B_C_ratio_obj.chi_square_val,4,5)
                     make_plot_of_fluxdata_and_model(Boron_flux_ams_df,'Boron',log_y,which_error,b_obj.rigidity_modulated,b_obj.flux_rigidity_modulated,4,5)
                     make_plot_of_fluxdata_and_modelresiduals(Boron_flux_ams_df,'Boron',log_y,which_error,b_obj.rigidity_modulated,b_obj.flux_rigidity_modulated,b_obj.residuals,4,5)
+                    make_plot_of_multifluxdata_and_model(Boron_flux_ams_df,'Boron',Carbon_flux_ams_df,'Carbon',Oxygen_flux_ams_df,'Oxygen',log_y,which_error,b_obj,c_obj,o_obj,4,5)
                     #print(f'residuals: {b_obj.residuals}')
                 #ratios_splined_per_diffusion[halo_model-11]=B_C_ratio_spline
                 #stats_per_diffusion[halo_model-11]=stats_obj

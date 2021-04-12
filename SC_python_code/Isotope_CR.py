@@ -65,7 +65,7 @@ def make_boron_nuclei(name,charge,energy_per_nuc,model,solar_phi,spline_steps,fl
     n_obj.add_isotopes('B-10',10,charge)
     n_obj.add_isotopes('B-11',11,charge)
     j=0
-    print(len(n_obj.list_isotopes))
+    #print(len(n_obj.list_isotopes))
     while j< len(n_obj.list_isotopes):
         n_obj.list_isotopes[j].add_energy_per_nucleon(energy_per_nuc.copy())
         #print(cosmic_ray_nuclei_index.boron_list[j])
@@ -85,7 +85,7 @@ def make_beryllium_nuclei(name,charge,energy_per_nuc,model,solar_phi,spline_step
     n_obj.add_isotopes('Be-9',9,charge)
     n_obj.add_isotopes('Be-10',10,charge)
     j=0
-    print(len(n_obj.list_isotopes))
+    #print(len(n_obj.list_isotopes))
     while j< len(n_obj.list_isotopes):
         n_obj.list_isotopes[j].add_energy_per_nucleon(energy_per_nuc.copy())
         #print(cosmic_ray_nuclei_index.boron_list[j])
