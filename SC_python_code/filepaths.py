@@ -6,4 +6,4 @@ import os
 #tarfile_path='/home/mcbride.342/galprop_sims/keith_runs_multiple/out_FITS/runs_L_D/'
 tarfile_path='/fs/project/beatty.85/mcbride.342/multiple_spectral_outputs/out_FITS/runs_L_D/'
 images_path='/fs/project/beatty.85/mcbride.342/analysis_GCR_models/SC_python_code/images/'
-data_path='/fs/project/beatty.85/mcbride.342/AMS/AMS_Data/Ratios/'
+data_path='/fs/project/beatty.85/mcbride.342/AMS/AMS_Data/'
