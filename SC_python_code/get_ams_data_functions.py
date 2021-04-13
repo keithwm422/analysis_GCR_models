@@ -3,7 +3,7 @@
 
 # In[ ]:
 
-
+from decimal import Decimal
 import numpy as np
 import pandas as pd
 # Set up matplotlib and use a nicer set of plot parameters
@@ -13,7 +13,8 @@ matplotlib.rc('text', usetex=True)
 #matplotlib.rc_file("../../templates/matplotlibrc")
 import matplotlib.pyplot as plt
 import filepaths
-
+from scipy.optimize import minimize
+from scipy.interpolate import splev, splrep
 ### Takes the dataframe and returns the different columns separately including the calculated central rigidity bin value. For ratios
 def make_energies_and_errors(df,num,den,tots_error):
     rigidity=np.array((df.R_low.values,df.R_high.values.T))
@@ -522,6 +523,77 @@ def make_residual_histogram(numerator,denominator,which_error,residuals,chi,L,D)
     #don't show on supercomputer
     #plt.show()
 
+def chisq(A,flux_data,flux,errors):
+    model=A*flux
+    residuals=flux_data-model
+    chi_square=np.sum(np.true_divide(np.square(residuals),np.square(errors)))
+    return chi_square
+
+# pass these as is and these will be logged and unlogged internally
+def apply_scaler(rigidity_data,flux_data,rigidity,flux,errors):
+    #now interpolate
+    model_x_logged = np.log10(rigidity)
+    model_y_logged = np.log10(flux)
+    spl = splrep(model_x_logged,model_y_logged) # these should be logged, however, as that helps interpolation
+    data_x_logged = np.log10(rigidity_data.copy())
+    model_y_spline = splev(data_x_logged, spl)
+    model_y_spline=10**(model_y_spline)
+    res = minimize(chisq, 10 ,args=(flux_data,model_y_spline,errors), method='Nelder-Mead', tol=1e-6)
+    scale_val=res.x
+    flux*=scale_val
+    print(f'scaled by {scale_val}')
+    return flux
+
+
+### Plot the data and an example model and save to filepaths declared directory ###
+### Order matters, B,C,O preferrably
+def make_plot_of_multifluxdata_and_modelamplitude(df1,name1,df2,name2,df3,name3,log_show,which_error,n_obj1,n_obj2,n_obj3,L,D):
+    fnt=24
+    x1=0.5*df1.rigidity.values[0]
+    x2=1.5*df3.rigidity.values[-1]
+    y2=1.5*df3.flux.values[0]
+    y1=0.05*df1.flux.values[-1]
+    #y1=ratio[0]
+    #y2=5*10**-1
+    # correct the factor difference for the magnitudes of the fluxes for each element
+    n1_flux_scaled=apply_scaler(np.array(df1.rigidity.values).copy(),np.array(df1.flux.values).copy(),n_obj1.rigidity_modulated.copy(),
+                                                          n_obj1.flux_rigidity_modulated.copy(),np.array(df1.flux_errors.values).copy())
+    n2_flux_scaled=apply_scaler(np.array(df2.rigidity.values).copy(),np.array(df2.flux.values).copy(),n_obj2.rigidity_modulated.copy(),
+                                                          n_obj2.flux_rigidity_modulated.copy(),np.array(df2.flux_errors.values).copy())
+    n3_flux_scaled=apply_scaler(np.array(df3.rigidity.values).copy(),np.array(df3.flux.values).copy(),n_obj3.rigidity_modulated.copy(),
+                                                          n_obj3.flux_rigidity_modulated.copy(),np.array(df3.flux_errors.values).copy())
+    external_factor=10**(-2)
+    n3_flux_scaled*=external_factor
+    plt.figure(figsize=(10,10))
+    plt.errorbar(df1.rigidity.values,df1.flux.values,xerr=df1.rigidity_binsize.values,yerr=df1.flux_errors.values,fmt='o',label=name1+", AMS")
+    plt.errorbar(df2.rigidity.values,df2.flux.values,xerr=df2.rigidity_binsize.values,yerr=df2.flux_errors.values,fmt='o',label=name2+", AMS")
+    plt.errorbar(df3.rigidity.values,external_factor*df3.flux.values,xerr=df3.rigidity_binsize.values,yerr=external_factor*df3.flux_errors.values,fmt='o',
+                                                                                                               label=f'{Decimal(external_factor):2.0E} x '+name3+", AMS")
+    plt.plot(n_obj1.rigidity_modulated,n1_flux_scaled,'b--',label=n_obj1.name+", Model")
+    plt.plot(n_obj2.rigidity_modulated,n2_flux_scaled,'y--',label=n_obj2.name+", Model")
+    plt.plot(n_obj3.rigidity_modulated,n3_flux_scaled,'g--',label=f'{Decimal(external_factor):2.0E} x '+n_obj3.name+", Model")
+    #plt.plot(n_obj2.rigidity_modulated,n_obj2.flux_rigidity_modulated,'y--',label=n_obj2.name+", Model")
+    #plt.plot(n_obj3.rigidity_modulated,n_obj3.flux_rigidity_modulated,'g--',label=n_obj3.name+", Model")
+    plt.xscale("log")
+    plt.xlabel("Rigidity [GV]",fontsize=fnt)
+    plt.xticks(fontsize=fnt-4)
+    if log_show==1:
+        plt.yscale("log")
+    plt.ylabel("Flux "r'm$^{-2}$ s$^{-1}$ sr$^{-1}$ GeV$^{-1}$',fontsize=fnt)
+    plt.yticks(fontsize=fnt-4)
+    plt.xlim([x1,x2])
+    plt.ylim([y1,y2])
+    #plt.legend(loc='lower right', fontsize=fnt-4)
+    plt.legend(loc='lower left', fontsize=fnt)
+    plt.title("Spectra of Cosmic Ray Nuclei with Model L="+str(L)+",D="+str(D), fontsize=fnt)
+    if which_error==1:
+        plt.savefig(filepaths.images_path+"_multi_"+name1+"_"+name2+"_"+name3+"_totserror_ams_data_andmodelamplitude"+str(L)+"_"+str(D)+".png")
+    else:
+        plt.savefig(filepaths.images_path+"_multi_"+name1+"_"+name2+"_"+name3+"_ams_data_andmodelamplitude"+str(L)+"_"+str(D)+".png")
+    #don't show on supercomputer
+    #plt.show()
+
+
 ### Plot the data and an example model and save to filepaths declared directory ###
 ### Order matters, B,C,O preferrably
 def make_plot_of_multifluxdata_and_model(df1,name1,df2,name2,df3,name3,log_show,which_error,n_obj1,n_obj2,n_obj3,L,D):
@@ -538,6 +610,7 @@ def make_plot_of_multifluxdata_and_model(df1,name1,df2,name2,df3,name3,log_show,
     plt.errorbar(df3.rigidity.values,df3.flux.values,xerr=df3.rigidity_binsize.values,yerr=df3.flux_errors.values,fmt='o',label=name3+", AMS")
     plt.plot(n_obj1.rigidity_modulated,n_obj1.flux_rigidity_modulated,'b--',label=n_obj1.name+", Model")
     plt.plot(n_obj2.rigidity_modulated,n_obj2.flux_rigidity_modulated,'y--',label=n_obj2.name+", Model")
+    #plt.plot(n_obj3.rigidity_modulated,n_obj3.flux_rigidity_modulated,'g--',label=n_obj3.name+", Model")
     plt.plot(n_obj3.rigidity_modulated,n_obj3.flux_rigidity_modulated,'g--',label=n_obj3.name+", Model")
     plt.xscale("log")
     plt.xlabel("Rigidity [GV]",fontsize=fnt)
