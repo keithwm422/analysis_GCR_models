@@ -78,6 +78,8 @@ def plot_ratio_chisquare_with_interpolation(seq,numerator,denominator):
     chi_interp = interpolate.RectBivariateSpline(D,L,chi_real_transposed,kx=degree_x,ky=degree_y,s=smoothing)
     L_new=np.arange(1,20.1,0.1)
     D_new=np.arange(1,20.1,0.1)
+    #print(f'new::{L_new}')
+    #print(f'len:{len(L_new)}')
     #chi_new=chi_interp(D_new,L_new)
     chi_new=chi_interp(D_new,L_new)
     print(np.where(chi_new==0))
@@ -182,7 +184,7 @@ def plot_CI_ratio(seq,numerator,denominator):
 # find the chi square values that are within 6.14 of the minimum model chi_square
     fnt=24
     chi_real_transposed_1,chi_new=plot_ratio_chisquare_with_interpolation(seq,numerator,denominator)
-    delta_chi=6.14
+    delta_chi=110
     #models_new=model_real_transposed.copy()
     min_chi_square=np.amin(chi_real_transposed_1)
     min_chi_tuple=np.where(chi_real_transposed_1==min_chi_square)
@@ -198,10 +200,12 @@ def plot_CI_ratio(seq,numerator,denominator):
     D_s_allowed=np.true_divide(D_s_allowed,10)+1
     plt.figure(figsize=(12,12))
     # these are for the minimum model add a nice big star to the minimum chi model found
-    x=np.array(8)
-    y=np.array(11)
+    x=np.array(min_chi_tuple[1]+1)
+    y=np.array(min_chi_tuple[0]+1)
+    print(x)
+    print(y)
     z=1
-    plt.plot(D_s_allowed,L_s_allowed,color="red",marker="p",ms=5,linestyle='None',label="95\%")
+    plt.plot(D_s_allowed,L_s_allowed,color="red",marker="p",ms=1,linestyle='None',label="95\%")
     plt.scatter(x,y,s=400,marker="x",label='Minimum')
     plt.legend(loc='upper right',fontsize=fnt-4)
     plt.xticks(fontsize=fnt-4)
@@ -210,9 +214,9 @@ def plot_CI_ratio(seq,numerator,denominator):
     plt.ylim([1,20])
     plt.ylabel("halo size (kpc)",fontsize=fnt-4)
     plt.xlabel("Diffusion Coefficient "r'($10^{28}$cm$^{2}$s$^{-1}$)',fontsize=fnt-4)
-    plt.title(numerator + "/" + denominator+r' $\Delta chi ^{2} \leq 6.14$',fontsize=fnt,y=1)
+    plt.title(numerator + "/" + denominator+r' $\Delta \chi ^{2} \leq $'+str(delta_chi),fontsize=fnt,y=1)
     plt.savefig(filepaths.images_path+numerator+"_"+denominator+"_halo-diffusion_confidence_interval.png",dpi=400)
-
+    return L_s_allowed,D_s_allowed,x,y,chi_new,min_chi_square,delta_chi
 #plot_ratio_chisquare_with_interpolation(seq,numerator,denominator)
 def plot_CI_bery_ratio(seq):
 # find the chi square values that are within 6.14 of the minimum model chi_square
@@ -240,7 +244,7 @@ def plot_CI_bery_ratio(seq):
     print(x)
     print(y)
     z=1
-    plt.plot(D_s_allowed,L_s_allowed,color="red",marker="p",ms=5,linestyle='None',label="95\%")
+    plt.plot(D_s_allowed,L_s_allowed,color="red",marker="p",ms=1,linestyle='None',label="95\%")
     plt.scatter(x,y,s=400,marker="x",label='Minimum')
     plt.legend(loc='upper right',fontsize=fnt-4)
     plt.xticks(fontsize=fnt-4)
@@ -251,3 +255,117 @@ def plot_CI_bery_ratio(seq):
     plt.xlabel("Diffusion Coefficient "r'($10^{28}$cm$^{2}$s$^{-1}$)',fontsize=fnt-4)
     plt.title("Be-10/Be-9 "r'$\Delta \chi ^{2} \leq 6.14$',fontsize=fnt,y=1)
     plt.savefig(filepaths.images_path+"Be10_Be9"+"_halo-diffusion_confidence_interval.png",dpi=400)
+
+
+def plot_bery_ratio_KE(seq):
+    chi_nparray=np.empty([20,20])
+    chi_nparray = np.loadtxt('be10_be9_ratio_KE_2.txt')
+    fnt=24
+    fig, ax = plt.subplots(figsize=(10,10)) 
+    cax=ax.matshow(np.transpose(chi_nparray),cmap='plasma',origin='lower',vmax=np.max(chi_nparray), vmin=np.min(chi_nparray))
+    #print(chi_new.shape)
+    ax.tick_params(axis="x", bottom=True, top=False, labelbottom=True, labeltop=False)
+    ax.set_xticks([i for i in range(0,20)])
+    ax.set_xticklabels([str(i) for i in range(1,21)], fontsize=fnt-4)
+    #ax.set_yticklabels([Categories[i] for i in range(20)],fontsize=14)
+    #ax.colorbar()
+    ax.set_yticks([i for i in range(0,20)])
+    ax.set_yticklabels([str(i) for i in range(1,21)], fontsize=fnt-4)
+    ax.set_xlabel("Diffusion Coefficient "r'($10^{28}$cm$^{2}$s$^{-1}$)', fontsize = fnt-2)
+    ax.set_ylabel("Halo Size (kpc)", fontsize = fnt-2)
+    cb=fig.colorbar(cax)
+    #cb = colorbar() # grab the Colorbar instance
+    for t in cb.ax.get_yticklabels():
+        t.set_fontsize(fnt-4)
+    plt.title("Be-10/Be-9 at 2 GeV/n",fontsize=fnt,y=1)
+    plt.savefig(filepaths.images_path+"bery_ratio_colormap.png",dpi=400)
+
+def plot_bery_ratio_KE_with_chisquare(seq):
+    ls,ds,x,y=plot_CI_ratio(1,'B','C')
+    chi_nparray=np.empty([20,20])
+    chi_nparray = np.loadtxt('be10_be9_ratio_KE_2.txt')
+    fnt=24
+    fig, ax = plt.subplots(figsize=(10,10)) 
+    cax=ax.matshow(np.transpose(chi_nparray),cmap='plasma',origin='lower',vmax=np.max(chi_nparray), vmin=np.min(chi_nparray))
+    plt.scatter(x-1,y-1,s=400,marker="x",label='Minimum',zorder=1)
+    plt.plot(ds-1,ls-1,color="red",marker="p",ms=1,linestyle='None',label="95\%",zorder=1,alpha=0.25)
+    #print(chi_new.shape)
+    ax.tick_params(axis="x", bottom=True, top=False, labelbottom=True, labeltop=False)
+    ax.set_xticks([i for i in range(0,20)])
+    ax.set_xticklabels([str(i) for i in range(1,21)], fontsize=fnt-4)
+    #ax.set_yticklabels([Categories[i] for i in range(20)],fontsize=14)
+    #ax.colorbar()
+    ax.set_yticks([i for i in range(0,20)])
+    ax.set_yticklabels([str(i) for i in range(1,21)], fontsize=fnt-4)
+    ax.set_xlabel("Diffusion Coefficient "r'($10^{28}$cm$^{2}$s$^{-1}$)', fontsize = fnt-2)
+    ax.set_ylabel("Halo Size (kpc)", fontsize = fnt-2)
+    cb=fig.colorbar(cax)
+    #cb = colorbar() # grab the Colorbar instance
+    for t in cb.ax.get_yticklabels():
+        t.set_fontsize(fnt-4)
+    plt.title("Be-10/Be-9 at 2 GeV/n",fontsize=fnt,y=1)
+    plt.savefig(filepaths.images_path+"bery_ratio_colormap_with_chisquare.png",dpi=400)
+# what if we find the borders and plot those only?
+def plot_bery_ratio_KE_with_chisquareborders(seq):
+    ls,ds,x,y,chi_new,min_chi_square,delta_chi=plot_CI_ratio(1,'B','C')
+    #print(f'ls: {ls-1}')
+    #print(f'ds: {ds-1}')
+    #print(f'{len(ls)}')
+    #allowed_space=np.zeros(chi_new.shape)
+    #print(allowed_space.shape)
+    #print(chi_new<(min_chi_square+delta_chi))
+    allowed_space=np.where(chi_new<(min_chi_square+delta_chi),1,0)
+    print(allowed_space[0,0])
+    num_ls=len(chi_new[0]) # to get the L,D model chi use chi_new[L,D]
+    # for constant L, find the first and last D (if any) and
+    l_border=[]
+    d_border=[]
+    i_l=0
+    while i_l<num_ls:
+        i_d=0
+        while i_d<num_ls:
+            if allowed_space[i_l,i_d]==1:
+                l_border.append(float(i_l+1)/10)
+                d_border.append(float(i_d+1)/10)
+                break
+            i_d+=1
+        i_l+=1
+    # now go backwards
+    i_l=num_ls-1
+    while i_l>=0:
+        i_d=num_ls-1
+        while i_d>=0:
+            if allowed_space[i_l,i_d]==1:
+                l_border.append(float(i_l+1)/10)
+                d_border.append(float(i_d+1)/10)
+                break
+            i_d-=1
+        i_l-=1
+    d_border_array=np.array(d_border)
+    l_border_array=np.array(l_border)
+    print(d_border_array)
+    chi_nparray=np.empty([20,20])
+    chi_nparray = np.loadtxt('be10_be9_ratio_KE_2.txt')
+    fnt=24
+    fig, ax = plt.subplots(figsize=(10,10)) 
+    cax=ax.matshow(np.transpose(chi_nparray),cmap='twilight',origin='lower',vmax=np.max(chi_nparray)-0.05, vmin=np.min(chi_nparray))
+    plt.scatter(x-1,y-1,s=400,marker="x",label='Minimum',zorder=1)
+    #plt.plot(ds-1,ls-1,color="red",marker="p",ms=1,linestyle='None',label="95\%",zorder=1,alpha=0.5)
+    plt.plot(d_border_array,l_border_array,color="black",marker="o",ms=1.5,label="B/C region",zorder=1)
+    #print(chi_new.shape)
+    ax.tick_params(axis="x", bottom=True, top=False, labelbottom=True, labeltop=False)
+    ax.set_xticks([i for i in range(0,20)])
+    ax.set_xticklabels([str(i) for i in range(1,21)], fontsize=fnt-4)
+    #ax.set_yticklabels([Categories[i] for i in range(20)],fontsize=14)
+    #ax.colorbar()
+    ax.set_yticks([i for i in range(0,20)])
+    ax.set_yticklabels([str(i) for i in range(1,21)], fontsize=fnt-4)
+    ax.set_xlabel("Diffusion Coefficient "r'($10^{28}$cm$^{2}$s$^{-1}$)', fontsize = fnt-2)
+    ax.set_ylabel("Halo Size (kpc)", fontsize = fnt-2)
+    cb=fig.colorbar(cax)
+    #cb = colorbar() # grab the Colorbar instance
+    for t in cb.ax.get_yticklabels():
+        t.set_fontsize(fnt-4)
+    plt.title("Be-10/Be-9 at 2 GeV/n",fontsize=fnt,y=1)
+    plt.legend(loc='upper right',fontsize=fnt-4)
+    plt.savefig(filepaths.images_path+"bery_ratio_colormap_with_chisquareborders.png",dpi=400)
