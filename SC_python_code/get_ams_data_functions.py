@@ -547,6 +547,46 @@ def make_residual_histogram(numerator,denominator,which_error,residuals,chi,L,D)
     #don't show on supercomputer
     #plt.show()
 
+def make_residual_R_plot(numerator,denominator,which_error,residuals,chi,rigidity,L,D):
+    fnt=24
+    n_bins=20
+    range_bins=[-0.02,0.02]
+    #x1=df.rigidity.values[0]-0.1
+    #x2=1.5*df.rigidity.values[-1]
+    #y1=ratio[0]
+    #y2=5*10**-1
+    plt.figure(figsize=(12,12))
+    plt.plot(rigidity[rigidity>65],residuals,linestyle='None',ms=8,marker='o')
+    plt.xscale("log")
+    plt.xlabel("Rigidity [GV]",fontsize=fnt)
+    plt.ylabel("Residual",fontsize=fnt)
+    plt.xticks(fontsize=fnt-4)
+    ax=plt.gca()
+    ax.tick_params(which='both',width=2, length=7)
+    ax.tick_params(which='minor',width=1.2, length=4)
+    #if log_show==1:
+    #   plt.yscale("log")
+    #plt.ylabel("Flux division "+numerator+"/"+denominator,fontsize=fnt)
+    plt.yticks(fontsize=fnt-4)
+    ax=plt.gca()
+    ax.tick_params(which='both',width=2, length=7)
+    ax.tick_params(which='minor',width=1.2, length=4)
+    #plt.xlim([x1,x2])
+    #plt.ylim([y1,y2])
+    #plt.legend(loc='lower right', fontsize=fnt-4)
+    #plt.legend(loc='upper right', fontsize=fnt)
+    plt.title(f'{numerator}/{denominator} Model L='+str(L)+",D="+str(D), fontsize=fnt)
+    plt.text(70,0.009,s=r"$\chi ^{2}=$"+str(round(chi,3)),size=20,bbox=dict(boxstyle="round",
+                  ec=(1., 0.5, 0.5),
+                  fc=(1., 0.8, 0.8),
+                  ))
+    if which_error==1:
+        plt.savefig(filepaths.images_path+numerator+"_"+denominator+"_totserror_residual"+str(L)+"_"+str(D)+"R.png")
+    else:
+        plt.savefig(filepaths.images_path+numerator+"_"+denominator+"_residual"+str(L)+"_"+str(D)+"R.png")
+    #don't show on supercomputer
+    #plt.show()
+
 def chisq(A,flux_data,flux,errors):
     model=A*flux
     residuals=flux_data-model
