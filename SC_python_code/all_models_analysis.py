@@ -37,7 +37,7 @@ from scipy.interpolate import splev, splrep
 def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
     ########## FIRST THE DATA ##########
     which_error=1
-    MAX_DIFFUSION=20
+    MAX_DIFFUSION=6
     KE_of_interest=2 # GeV/n that each model will spit out a prediction for
     ### Loading Ratios ###
     numerator='B'  # numerator of the nuclei ratio used in the chi_square calculation (needs to also be AMS_DATA file first character)
@@ -149,7 +149,13 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
     spectral_index_nparray_be_c=np.empty([20,20]) # fitting to B/C ratio
     spectral_amplitude_nparray_be_c=np.empty([20,20]) # fitting to B/C ratio
     covariance_nparray_be_c=np.empty([20,20,2,2])
-    diffusion_number=1 #(set to [1,20])
+    diffusion_number=3 #(set to [1,20])
+    energykeep=[]
+    energykeepbe=[]
+    Dkeep=[]
+    Lkeep=[]
+    B_C_ratio_modelskeep=[]
+    Be_ratio_modelskeep=[]
     while diffusion_number<MAX_DIFFUSION+1:
         chi_square_temp=[]  # reset this one at each iteration
         #first arg is not used currently for the following function (so it can be anything really)
@@ -178,6 +184,7 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
         spectral_amplitude_per_diffusion_be_c=np.empty([20,])
         covariance_per_diffusion_be_c=np.empty([20,2,2])
         while halo_model<20:
+            print(f'halo_model={halo_model} and diffusion_number={diffusion_number}')
             # to get a nuclei ratio, need nuclei fluxes. these are classes too. after a nuclei is made, if it had been hardcoded for an isotope ratio, this will be saved as well
             b_obj=make_boron_nuclei("Boron",5,energy,halo_model,solar_phi,num_spline_steps,fluxes_per_element_per_diffusion)
             c_obj=make_carbon_nuclei("Carbon",6,energy,halo_model,solar_phi,num_spline_steps,fluxes_per_element_per_diffusion)
@@ -308,16 +315,46 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
                 spectral_amplitude_per_diffusion_be_c[halo_model-11]=spec_A_be_c
                 covariance_per_diffusion_be_c[halo_model-11]=spec_cov_be_c
                 # if you want to add a model and data to a plot to investigate, use the ones defined in get_ams py file
-                if halo_model-11==3:
-                    #print(h_obj.isotope_ratio_energy_per_nucleon_modulated)
-                    #make_plot_of_data_and_model(B_C_df,'B','C',log_y,which_error,B_C_ratio_obj.rigidity_modulated,B_C_ratio_obj.ratio_rigidity_modulated,4,5)
-                    #make_plot_of_data_and_modelresiduals(B_C_df,B_C_ratio_obj.residuals,'B','C',log_y,which_error,B_C_ratio_obj.rigidity_modulated,
-                    #                                     B_C_ratio_obj.ratio_rigidity_modulated,4,5,cutoff)
-                    #make_residual_histogram('B','C',which_error,B_C_ratio_obj.residuals,B_C_ratio_obj.chi_square_val,4,5)
-                    #make_plot_of_fluxdata_and_model(Boron_flux_ams_df,'Boron',log_y,which_error,b_obj.rigidity_modulated,b_obj.flux_rigidity_modulated,4,5)
-                    #make_plot_of_fluxdata_and_modelresiduals(Boron_flux_ams_df,'Boron',log_y,which_error,b_obj.rigidity_modulated,b_obj.flux_rigidity_modulated,b_obj.residuals,4,5)
-                    #make_plot_of_multifluxdata_and_model(Boron_flux_ams_df,'Boron',Carbon_flux_ams_df,'Carbon',Oxygen_flux_ams_df,'Oxygen',log_y,which_error,b_obj,c_obj,o_obj,4,5)
-                    #make_plot_of_multifluxdata_and_modelamplitude(Boron_flux_ams_df,'Boron',Carbon_flux_ams_df,'Carbon',Oxygen_flux_ams_df,'Oxygen',log_y,which_error,b_obj,c_obj,o_obj,4,5)
+                #if halo_model-11==4:
+                #    #print(h_obj.isotope_ratio_energy_per_nucleon_modulated)
+                #    l=4+1
+                #    d=6
+                #    make_plot_of_data_and_model(B_C_df,'B','C',log_y,which_error,B_C_ratio_obj.rigidity_modulated,B_C_ratio_obj.ratio_rigidity_modulated,l,d)
+                #    make_plot_of_data_and_modelresiduals(B_C_df,B_C_ratio_obj.residuals,'B','C',log_y,which_error,B_C_ratio_obj.rigidity_modulated,
+                #                                         B_C_ratio_obj.ratio_rigidity_modulated,l,d,cutoff)
+                #    make_residual_histogram('B','C',which_error,B_C_ratio_obj.residuals,B_C_ratio_obj.chi_square_val,l,d)
+                #    make_residual_R_plot('B','C',which_error,B_C_ratio_obj.residuals,B_C_ratio_obj.chi_square_val,B_C_df.rigidity.values,l,d)
+                #    make_plot_of_fluxdata_and_model(Boron_flux_ams_df,'Boron',log_y,which_error,b_obj.rigidity_modulated,b_obj.flux_rigidity_modulated,l,d)
+                #    make_plot_of_fluxdata_and_modelresiduals(Boron_flux_ams_df,'Boron',log_y,which_error,b_obj.rigidity_modulated,b_obj.flux_rigidity_modulated,b_obj.residuals,l,d)
+                #    make_plot_of_multifluxdata_and_model(Boron_flux_ams_df,'Boron',Carbon_flux_ams_df,'Carbon',Oxygen_flux_ams_df,'Oxygen',log_y,which_error,b_obj,c_obj,o_obj,l,d)
+                #    make_plot_of_multifluxdata_and_modelamplitude(Boron_flux_ams_df,'Boron',Carbon_flux_ams_df,'Carbon',Oxygen_flux_ams_df,'Oxygen',log_y,which_error,b_obj,c_obj,o_obj,l,d)
+                if halo_model-11==4 and diffusion_number==5:  # this will be L=5,D=5 which will occur first
+                    l=4+1
+                    d=diffusion_number
+                    Lkeep.append(l)
+                    Dkeep.append(d)
+                    energykeep.append(B_C_ratio_obj.energy_per_nucleon_modulated)
+                    B_C_ratio_modelskeep.append(B_C_ratio_obj.ratio_energy_per_nucleon_modulated)
+                    energykeepbe.append(be_obj.energy_per_nucleon_modulated)
+                    Be_ratio_modelskeep.append(be_obj.isotope_ratio_energy_per_nucleon_modulated)
+                if halo_model-11==4 and diffusion_number==6:  # this will be L=5,D=6 which will occur second
+                    l=4+1
+                    d=diffusion_number
+                    Lkeep.append(l)
+                    Dkeep.append(d)
+                    energykeep.append(B_C_ratio_obj.energy_per_nucleon_modulated)
+                    B_C_ratio_modelskeep.append(B_C_ratio_obj.ratio_energy_per_nucleon_modulated)
+                    energykeepbe.append(be_obj.energy_per_nucleon_modulated)
+                    Be_ratio_modelskeep.append(be_obj.isotope_ratio_energy_per_nucleon_modulated)
+                if halo_model-11==5 and diffusion_number==6:  # this will be L=6,D=6 which will occur second
+                    l=5+1
+                    d=diffusion_number
+                    Lkeep.append(l)
+                    Dkeep.append(d)
+                    energykeep.append(B_C_ratio_obj.energy_per_nucleon_modulated)
+                    B_C_ratio_modelskeep.append(B_C_ratio_obj.ratio_energy_per_nucleon_modulated)
+                    energykeepbe.append(be_obj.energy_per_nucleon_modulated)
+                    Be_ratio_modelskeep.append(be_obj.isotope_ratio_energy_per_nucleon_modulated)
                     #print(f'residuals: {b_obj.residuals}')
                 #ratios_splined_per_diffusion[halo_model-11]=B_C_ratio_spline
                 #stats_per_diffusion[halo_model-11]=stats_obj
@@ -341,9 +378,15 @@ def run_analysis_test(seq,num_spline_steps,cutoff,solar_phi):
         covariance_nparray_be_c[diffusion_number-1]=covariance_per_diffusion_be_c
         #stats_full[diffusion_number-1]=stats_per_diffusion
         #stats_masked_full[diffusion_number-1]=stats_masked_per_diffusion
+        # to skip unwanted diffusion_numbers for debugging or plots:
+        if diffusion_number==3:
+            diffusion_number+=1
         diffusion_number+=1
-    #something else
 
+    #something else
+    #make a plot of multiple models after saving the arrays above
+    make_plot_of_B_C_all_data('B','C',0,energykeep,B_C_ratio_modelskeep,Lkeep,Dkeep)
+    make_plot_of_Beisotope_data_and_models('Be-10','Be-9',0,energykeepbe,Be_ratio_modelskeep,Lkeep,Dkeep)
     #print('{chi_square_array[0][0]})
     print("Saved file")
     #return chi_square_array,chi_square_nparray,model_name_full,stats_full,stats_masked_full

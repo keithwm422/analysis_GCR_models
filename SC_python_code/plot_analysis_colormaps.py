@@ -14,7 +14,7 @@ from scipy.interpolate import splev, splrep
 def plot_B_C_fit_index(seq):
     spectral_index_nparray=np.empty([20,20])
     spectral_index_nparray = np.loadtxt(filepaths.outputs_path+'spectralindexfits_-0.33nominal.txt')
-    fnt=24
+    fnt=28
     fig, ax = plt.subplots(figsize=(10,10)) 
     cax=ax.matshow(np.transpose(spectral_index_nparray),cmap='plasma',origin='lower',vmax=-0.315, vmin=-0.345)
     #print(chi_new.shape)
@@ -35,7 +35,7 @@ def plot_B_C_fit_index(seq):
     plt.savefig(filepaths.images_path+"spectral_index_colormap_tuning.png",dpi=400)
 
 def plot_input_diffusion_R_index(seq):
-    fnt=24
+    fnt=28
     spectral_index_nparray=np.empty([20,20])
     spectral_index_nparray =np.genfromtxt(open("diffusion_index_LUT.csv", "rb"), delimiter=",",dtype=float)
     #spectral_index_nparray = np.loadtxt('diffusion_index_LUT.csv')
@@ -60,7 +60,7 @@ def plot_input_diffusion_R_index(seq):
 
 def plot_ratio_chisquare_with_interpolation(seq,numerator,denominator):
     # now make an interpolation on these values L and D values of chi square
-    fnt=24
+    fnt=28
     chi_nparray=np.empty([20,20])
     #chi_nparray =np.loadtxt(numerator+'_'+denominator+'_chisquare_error1.txt')
     chi_nparray =np.loadtxt(filepaths.outputs_path+'chisquare_cutoff_-0.33nominal_error_1b_c.txt')
@@ -116,7 +116,7 @@ def plot_ratio_chisquare_with_interpolation(seq,numerator,denominator):
     return chi_real_transposed, chi_new
 def plot_bery_ratio_chisquare_with_interpolation(seq):
     # now make an interpolation on these values L and D values of chi square
-    fnt=24
+    fnt=28
     chi_nparray=np.empty([20,20])
     #chi_nparray =np.loadtxt('bery_chisquare_error1.txt')
     chi_nparray =np.loadtxt(filepaths.outputs_path+'chisquare_cutoff_-0.33nominal_error_1be.txt')
@@ -167,7 +167,7 @@ def plot_bery_ratio_chisquare_with_interpolation(seq):
 
 def plot_ratio_chisquare(seq,numerator,denominator):
     # now make an interpolation on these values L and D values of chi square
-    fnt=24
+    fnt=28
     chi_nparray=np.empty([20,20])
     #chi_nparray =np.loadtxt(numerator+'_'+denominator+'_chisquare_error1.txt')
     chi_nparray =np.loadtxt(filepaths.outputs_path+'chisquare_cutoff_-0.33nominal_error_1b_c.txt')
@@ -198,7 +198,7 @@ def plot_ratio_chisquare(seq,numerator,denominator):
 def plot_bery_ratio_chisquare(seq):
     chi_nparray=np.empty([20,20])
     chi_nparray = np.loadtxt(filepaths.outputs_path+'bery_chisquare_error1.txt')
-    fnt=24
+    fnt=28
     fig, ax = plt.subplots(figsize=(10,10)) 
     cax=ax.matshow(np.transpose(chi_nparray),cmap='plasma',origin='lower',vmax=100, vmin=10)
     #print(chi_new.shape)
@@ -221,7 +221,7 @@ def plot_bery_ratio_chisquare(seq):
 #plot_ratio_chisquare_with_interpolation(seq,numerator,denominator)
 def plot_CI_ratio(seq,numerator,denominator):
 # find the chi square values that are within 6.14 of the minimum model chi_square
-    fnt=24
+    fnt=28
     chi_real_transposed_1,chi_new=plot_ratio_chisquare_with_interpolation(seq,numerator,denominator)
     delta_chi=34
     #models_new=model_real_transposed.copy()
@@ -259,7 +259,7 @@ def plot_CI_ratio(seq,numerator,denominator):
 #plot_ratio_chisquare_with_interpolation(seq,numerator,denominator)
 def plot_CI_bery_ratio(seq):
 # find the chi square values that are within 6.14 of the minimum model chi_square
-    fnt=24
+    fnt=28
     chi_real_transposed_1,chi_new=plot_bery_ratio_chisquare_with_interpolation(seq)
     delta_chi=6.14
     #models_new=model_real_transposed.copy()
@@ -299,7 +299,7 @@ def plot_CI_bery_ratio(seq):
 def plot_bery_ratio_KE(seq):
     chi_nparray=np.empty([20,20])
     chi_nparray = np.loadtxt(filepaths.outputs_path+'be10_be9_ratio_KE_2.txt')
-    fnt=24
+    fnt=28
     fig, ax = plt.subplots(figsize=(10,10)) 
     cax=ax.matshow(np.transpose(chi_nparray),cmap='plasma',origin='lower',vmax=np.max(chi_nparray), vmin=np.min(chi_nparray))
     #print(chi_new.shape)
@@ -323,7 +323,7 @@ def plot_bery_ratio_KE_with_chisquare(seq):
     ls,ds,x,y=plot_CI_ratio(1,'B','C')
     chi_nparray=np.empty([20,20])
     chi_nparray = np.loadtxt(filepaths.outputs_path+'be10_be9_ratio_KE_2.txt')
-    fnt=24
+    fnt=28
     fig, ax = plt.subplots(figsize=(10,10)) 
     cax=ax.matshow(np.transpose(chi_nparray),cmap='plasma',origin='lower',vmax=np.max(chi_nparray), vmin=np.min(chi_nparray))
     plt.scatter(x-1,y-1,s=400,marker="x",label='Minimum',zorder=1)
@@ -385,7 +385,7 @@ def plot_bery_ratio_KE_with_chisquareborders(seq,KE):
     print(d_border_array)
     chi_nparray=np.empty([20,20])
     chi_nparray = np.loadtxt(filepaths.outputs_path+'be10_be9_ratio_KE_'+str(KE)+'.txt')
-    fnt=24
+    fnt=28
     fig, ax = plt.subplots(figsize=(10,10)) 
     cax=ax.matshow(np.transpose(chi_nparray),cmap='summer',origin='lower',vmax=0.35, vmin=0.01)
     #cax=ax.matshow(np.transpose(chi_nparray),cmap='summer',origin='lower',vmax=np.max(chi_nparray)-0.05, vmin=np.min(chi_nparray))
@@ -411,8 +411,8 @@ def plot_bery_ratio_KE_with_chisquareborders(seq,KE):
     plt.savefig(filepaths.images_path+"bery_ratio_colormap_with_chisquareborders"+str(KE)+".png",dpi=400)
 
 #it is assumed that x and y are understood by the user (no extra prep is done to x or y)
-def splineHELIX(x,y,num_steps,minimum,maximum):
-    spl = splrep(x,y)
+def splineHELIX(x,y,num_steps,minimum,maximum,smoothin):
+    spl = splrep(x,y,s=smoothin)
     x_cont = np.linspace(minimum, maximum, num_steps)
     y_spline = splev(x_cont, spl)
     return x_cont, y_spline
@@ -430,7 +430,7 @@ def find_sigmas(mass_1,mass_2,resolution_of_point):
     print(sigma_m1)
     return sigma_m1,sigma_m2
 
-def read_inHELIX(seq):
+def read_inHELIX(seq,smoothin):
     helix_mass_res_df=pd.read_csv(filepaths.outputs_path+'helix_mass_res.csv')
     helix_mass_res_df.tail()
     energy_array_logged=np.log10(helix_mass_res_df.Energy.values)
@@ -451,9 +451,9 @@ def read_inHELIX(seq):
     print(tof_end)
     rich_start=tof_end+1
     spline_x_TOF,spline_y_TOF=splineHELIX(energy_array_logged[tof_start:tof_end],mass_array_logged[tof_start:tof_end],
-                                 num_steps,energy_array_logged[tof_start],energy_array_logged[tof_end])
+                                 num_steps,energy_array_logged[tof_start],energy_array_logged[tof_end],smoothin)
     spline_x_RICH,spline_y_RICH=splineHELIX(energy_array_logged[rich_start:],mass_array_logged[rich_start:],
-                                 num_steps,energy_array_logged[rich_start],energy_array_logged[-1])
+                                 num_steps,energy_array_logged[rich_start],energy_array_logged[-1],smoothin)
     # Try taking the logarithm
     energy_array_logged=np.log10(helix_mass_res_df.Energy.values)
     mass_array_logged=np.log10(helix_mass_res_df.mass_res.values)
@@ -462,27 +462,35 @@ def read_inHELIX(seq):
     spline_y_TOF_reg=10**(spline_y_TOF)
     spline_x_RICH_reg=10**(spline_x_RICH)
     spline_y_RICH_reg=10**(spline_y_RICH)
-    fnt=24
-    y1=0.005
-    y2=2*10**-1
-    plt.figure(figsize=(12,12))
-    plt.plot(helix_mass_res_df.Energy.values,helix_mass_res_df.mass_res.values,'bo',label='From simulation')
-    plt.plot(spline_x_TOF_reg,spline_y_TOF_reg,'--',linewidth=3,label='interpolated TOF only')
-    plt.plot(spline_x_RICH_reg,spline_y_RICH_reg,'-.',linewidth=3,label='interpolated RICH')
+    fnt=28
+    y1=0.009
+    y2=1*10**-1
+    x1=8*10**-2
+    x2=2*10**1
+    rs=np.array([x1,x2])
+    ys=np.array([0.025,0.025])
+    plt.figure(figsize=(14,10))
+ #   plt.plot(helix_mass_res_df.Energy.values,helix_mass_res_df.mass_res.values,'bo',label="HELIX simulation")
+    plt.plot(spline_x_TOF_reg,spline_y_TOF_reg,'b--',linewidth=2, label="HELIX simulation")
+    plt.plot(spline_x_TOF_reg,spline_y_TOF_reg,'b--',linewidth=2)
+    plt.plot(spline_x_RICH_reg,spline_y_RICH_reg,'b--',linewidth=2)
+    plt.plot(rs,ys,'k-.',linewidth=1,label=r'$2.5$\% limit')
     plt.xticks(fontsize=fnt-4)
-    plt.xlabel("Energy [GeV/n]",fontsize=fnt) 
+    plt.xlabel("Kinetic Energy [GeV/n]",fontsize=fnt-2) 
     ax=plt.gca()
     ax.tick_params(which='both',width=2, length=7)
     ax.tick_params(which='minor',width=1.2, length=4)
     plt.yticks(fontsize=fnt-4)
-    plt.ylabel(r'$\delta m/m$',fontsize=fnt) 
+    plt.ylabel(r'$\delta m/m$',fontsize=fnt-2) 
     ax=plt.gca()
     ax.tick_params(which='both',width=2, length=7)
     ax.tick_params(which='minor',width=1.2, length=4)
     plt.xscale("log")
     plt.yscale("log")
-    plt.legend(loc='upper right',fontsize=fnt-4)
+    plt.legend(loc='upper left',fontsize=fnt-4)
     plt.ylim([y1,y2])
+    plt.xlim([x1,x2])
+    plt.title("HELIX Mass Resolution",fontsize=fnt)
     plt.savefig(filepaths.images_path+"mass_resolutions_helix_data.png",dpi=400)
     #use energy per nucleon
     KE_point=2 #GeV/nucleon
@@ -617,7 +625,7 @@ def plot_bery_ratio_KE_with_chisquareborders_smooth(seq,KE):
     #print(d_border_array)
     chi_nparray=np.empty([20,20])
     chi_nparray = np.loadtxt(filepaths.outputs_path+'be10_be9_ratio_KE_'+str(KE)+'.txt')
-    fnt=24
+    fnt=28
     step=5
     start=2
     fig, ax = plt.subplots(figsize=(10,10)) 
@@ -782,7 +790,8 @@ def plot_bery_ratio_KE_with_chisquareborders_smooth_HELIX(seq,KE,events_Be9,frac
     #chi_new=chi_interp(D_new,L_new)
     nominal_res=0.02 # sigma from the proposal plot
     # to get this value do the following
-    calc_res=frac*np.sqrt(frac*events_Be9 + events_Be9)/((1+frac)*events_Be9)
+    #calc_res=frac*np.sqrt(frac*events_Be9 + events_Be9)/((1+frac)*events_Be9)
+    calc_res=frac*0.05
     ratio_splined=ratio_interp(D_new,L_new)
     allowed_ratios=np.where(np.abs(ratio_splined-frac-calc_res/2.0)<=calc_res/2.0,1,0)
     tuples_found=np.where(np.abs(ratio_splined-frac-calc_res/2.0)<=calc_res/2.0)
@@ -847,23 +856,26 @@ def plot_bery_ratio_KE_with_chisquareborders_smooth_HELIX(seq,KE,events_Be9,frac
     
     #print(np.where(chi_new==0))
     #print(np.min(chi_new))
-    fnt=24
+    fnt=28
     step=5
     start=2
     fig, ax = plt.subplots(figsize=(10,10)) 
     # jim likes this one
     #cax=ax.matshow(ratio_nparray,cmap='gist_rainbow',origin='lower',vmax=np.max(ratio_nparray)-0.185, vmin=0.14)
     # i prefer this
-    cax=ax.matshow(ratio_nparray,cmap='hsv',origin='lower',vmax=0.4, vmin=0.12)
+    #cax=ax.matshow(ratio_nparray,cmap='hsv',origin='lower',vmax=0.4, vmin=0.12)
+    # beacom prefers this
+    cax=ax.matshow(ratio_nparray,cmap='RdYlBu',origin='lower',vmax=np.max(ratio_nparray)-0.185, vmin=0.14)
     #cax=ax.matshow(np.transpose(chi_nparray),cmap='summer',origin='lower',vmax=np.max(chi_nparray)-0.05, vmin=np.min(chi_nparray))
-    plt.plot(x-1,y-1,ms=6,marker="x",linestyle='None',color="black",label='Minimum',zorder=1)
+    plt.plot(x-1,y-1,ms=8,marker="+",linestyle='None',color="black",label='Minimum',zorder=1)
     #plt.plot(ds-1,ls-1,color="red",marker="p",ms=1,linestyle='None',label="95\%",zorder=1,alpha=0.5)
     #plt.plot(d_border_array[d_border_array>2.5],l_border_array[d_border_array>2.5],color="gray",marker="o",ms=1.5,linestyle='dashed',label="HELIX region",zorder=1)
     #plt.plot(d_border_array,l_border_array,color="gray",marker="o",ms=1.5,linestyle='dashed',label="HELIX region",zorder=1)
-    plt.plot(dtots,ltots,color="black",marker="o",ms=1.5,label="B/C region",zorder=1,alpha=0.5)
-    plt.plot(D_s_allowed-1,L_s_allowed-1,color="gray",marker="_",ms=1,linestyle='None',label="HELIX region",zorder=1,alpha=0.95)
+    plt.plot(dtots,ltots,color="black",linestyle='dashed', linewidth =2, marker=",",ms=0.5,label="B/C region",zorder=1,alpha=0.5)
+    #plt.plot(dtots,ltots,color="blue",marker="o",ms=1.5,label="B/C region",zorder=1,alpha=0.5)
+    plt.plot(D_s_allowed-1,L_s_allowed-1,color="black",marker="_",ms=0.75,linestyle='None',label="HELIX region",zorder=1,alpha=0.75)
     # add a horizontal line for the first and last values
-    plt.plot(dh,lh,color="black",marker="o",ms=1.5,zorder=1,alpha=0.5)
+    plt.plot(dh,lh,color="black",marker=",",linestyle='dashed', linewidth=2,ms=0.5,zorder=1,alpha=0.5)
     # old plot examples
     #plt.plot(d_spline_left,l_cont_left,color="black",marker="o",ms=1.5,label="B/C region",zorder=1,alpha=0.5)
     #plt.plot(d_spline_right,l_cont_right,color="black",marker="o",ms=1.5,label="B/C region",zorder=1,alpha=0.5)
@@ -886,10 +898,10 @@ def plot_bery_ratio_KE_with_chisquareborders_smooth_HELIX(seq,KE,events_Be9,frac
     for t in cb.ax.get_yticklabels():
         t.set_fontsize(fnt-4)
     plt.title("Be-10/Be-9 at "+str(KE)+" GeV/n",fontsize=fnt,y=1)
-    lgnd= plt.legend(loc='lower right',fontsize=fnt-4)
-    lgnd.legendHandles[0]._legmarker.set_markersize(6)
-    lgnd.legendHandles[1]._legmarker.set_markersize(1)
-    lgnd.legendHandles[2]._legmarker.set_markersize(8)
+    lgnd= plt.legend(loc='lower right',fontsize=fnt-2)
+    lgnd.legendHandles[0]._legmarker.set_markersize(8)
+    lgnd.legendHandles[1]._legmarker.set_markersize(0.5)
+    lgnd.legendHandles[2]._legmarker.set_markersize(10)
     if(save==1):
         plt.savefig(filepaths.images_path+"bery_ratio_colormap_with_chisquareborders_smooth"+str(KE)+"_"+str(events_Be9)+"_"+str(frac)+"_.png",dpi=400)
     plt.close()

@@ -122,7 +122,7 @@ def load_Be10_Be9_ratio():
     return ams_data_formatted_df
 
 def make_plot_of_Beisotope_data(df,numerator,denominator,log_show):
-    fnt=20
+    fnt=28
     x1=df.kinetic.min()-0.01
     x2=10**2
     #y1=ratio[0]
@@ -166,7 +166,7 @@ def make_plot_of_Beisotope_data(df,numerator,denominator,log_show):
 
 ### Plot the data and save to filepaths declared directory ###
 def make_plot_of_data(df,numerator,denominator,log_show,which_error):
-    fnt=20
+    fnt=28
     x1=df.rigidity.values[0]-0.1
     x2=1.5*df.rigidity.values[-1]
     #y1=ratio[0]
@@ -200,7 +200,7 @@ def make_plot_of_data(df,numerator,denominator,log_show,which_error):
 
 ### Plot the data and an example model and save to filepaths declared directory ###
 def make_plot_of_data_and_model(df,numerator,denominator,log_show,which_error,model_x,model_y, L,D):
-    fnt=24
+    fnt=28
     x1=df.rigidity.values[0]-0.1
     x2=1.5*df.rigidity.values[-1]
     y2=0.05+np.max(df.ratio.values)
@@ -235,7 +235,7 @@ def make_plot_of_data_and_model(df,numerator,denominator,log_show,which_error,mo
 
 ### Plot the ratio data and an example model with residuals and save to filepaths declared directory ###
 def make_plot_of_data_and_modelresiduals(df,residuals,numerator,denominator,log_show,which_error,model_x,model_y, L,D,cutoff):
-    fnt=24
+    fnt=28
     x1=df.rigidity.values[0]-0.1
     x2=1.5*df.rigidity.values[-1]
     y1=0.4
@@ -276,7 +276,7 @@ def make_plot_of_data_and_modelresiduals(df,residuals,numerator,denominator,log_
 
 ### Plot the data and an example model and save to filepaths declared directory ###
 def make_plot_of_fluxdata_and_model(df,name,log_show,which_error,model_x,model_y, L,D):
-    fnt=24
+    fnt=28
     x1=0.5*df.rigidity.values[0]
     x2=1.5*df.rigidity.values[-1]
     y2=1.5*df.flux.values[0]
@@ -313,7 +313,7 @@ def make_plot_of_fluxdata_and_model(df,name,log_show,which_error,model_x,model_y
 
 ### Plot the data and an example model with subplots of the residuals and save to filepaths declared directory ###
 def make_plot_of_fluxdata_and_modelresiduals(df,name,log_show,which_error,model_x,model_y, residuals,L,D):
-    fnt=24
+    fnt=28
     x1=0.5*df.rigidity.values[0]
     x2=1.5*df.rigidity.values[-1]
     gs_kw = dict(width_ratios=[1], height_ratios=[2,1])
@@ -376,7 +376,7 @@ def load_H2_H1_ratio():
 
 
 def make_plot_of_Hisotope_data(df,numerator,denominator,log_show):
-    fnt=20
+    fnt=28
     x1=df.kinetic.min()-0.01
     x2=10**2
     #y1=ratio[0]
@@ -433,7 +433,7 @@ def load_He3_He4_ratio():
 
 ### Plot the data and save to filepaths declared directory ###
 def make_plot_of_Heisotope_data(df,numerator,denominator,log_show):
-    fnt=20
+    fnt=28
     xmin=df.kinetic.min()
     x1=0.95*xmin
     xmax=df.kinetic.max()
@@ -483,7 +483,7 @@ def load_B_C_ratio_voyager():
 
 ### Plot the data and save to filepaths declared directory ###
 def make_plot_of_B_C_voyager_data(df,numerator,denominator,log_show):
-    fnt=20
+    fnt=28
     xmin=df.kinetic.min()
     x1=0.95*xmin
     xmax=df.kinetic.max()
@@ -509,7 +509,7 @@ def make_plot_of_B_C_voyager_data(df,numerator,denominator,log_show):
 
 
 def make_residual_histogram(numerator,denominator,which_error,residuals,chi,L,D):
-    fnt=24
+    fnt=28
     n_bins=20
     range_bins=[-0.02,0.02]
     #x1=df.rigidity.values[0]-0.1
@@ -548,7 +548,7 @@ def make_residual_histogram(numerator,denominator,which_error,residuals,chi,L,D)
     #plt.show()
 
 def make_residual_R_plot(numerator,denominator,which_error,residuals,chi,rigidity,L,D):
-    fnt=24
+    fnt=28
     n_bins=20
     range_bins=[-0.02,0.02]
     #x1=df.rigidity.values[0]-0.1
@@ -612,7 +612,7 @@ def apply_scaler(rigidity_data,flux_data,rigidity,flux,errors):
 ### Plot the data and an example model and save to filepaths declared directory ###
 ### Order matters, B,C,O preferrably
 def make_plot_of_multifluxdata_and_modelamplitude(df1,name1,df2,name2,df3,name3,log_show,which_error,n_obj1,n_obj2,n_obj3,L,D):
-    fnt=24
+    fnt=28
     x1=0.5*df1.rigidity.values[0]
     x2=1.5*df3.rigidity.values[-1]
     y2=1.5*df3.flux.values[0]
@@ -646,7 +646,7 @@ def make_plot_of_multifluxdata_and_modelamplitude(df1,name1,df2,name2,df3,name3,
     ax.tick_params(which='minor',width=1.2, length=4)
     if log_show==1:
         plt.yscale("log")
-    plt.ylabel("Flux "r'm$^{-2}$ s$^{-1}$ sr$^{-1}$ GeV$^{-1}$',fontsize=fnt)
+    plt.ylabel("Flux "r'[m$^{-2}$ s$^{-1}$ sr$^{-1}$ GeV$^{-1}$]',fontsize=fnt)
     plt.yticks(fontsize=fnt-4)
     ax=plt.gca()
     ax.tick_params(which='both',width=2, length=7)
@@ -667,7 +667,7 @@ def make_plot_of_multifluxdata_and_modelamplitude(df1,name1,df2,name2,df3,name3,
 ### Plot the data and an example model and save to filepaths declared directory ###
 ### Order matters, B,C,O preferrably
 def make_plot_of_multifluxdata_and_model(df1,name1,df2,name2,df3,name3,log_show,which_error,n_obj1,n_obj2,n_obj3,L,D):
-    fnt=24
+    fnt=28
     x1=0.5*df1.rigidity.values[0]
     x2=1.5*df3.rigidity.values[-1]
     y2=1.5*df3.flux.values[0]
@@ -707,3 +707,131 @@ def make_plot_of_multifluxdata_and_model(df1,name1,df2,name2,df3,name3,log_show,
     #don't show on supercomputer
     #plt.show()
 
+def load_B_C_ratio_all_data():
+# lets try saving the fluxes per element as a dataframe?
+    extension='.csv'
+    read_file=filepaths.data_path+"Ratios/"+'B_C_test_unmodulated_voyager_ams'+extension
+    multi_exp_df=pd.read_csv(read_file)
+    #print(multi_exp_df.head())
+    column_names=['experiment','kinetic','kinetic_binsize','ratio','ratio_errors']
+    # get just the voyager1- B_C ratio data.
+    names=multi_exp_df[(multi_exp_df['_experiment'].str.contains("Voyager1-")) | 
+                       (multi_exp_df['_experiment'].str.contains("AMS02"))]._experiment.values
+    kinetic=np.array((multi_exp_df[(multi_exp_df['_experiment'].str.contains("Voyager1-")) | 
+                       (multi_exp_df['_experiment'].str.contains("AMS02"))].EK_low.values,
+                      multi_exp_df[(multi_exp_df['_experiment'].str.contains("Voyager1-")) | 
+                       (multi_exp_df['_experiment'].str.contains("AMS02"))].EK_high.values.T))
+    kinetic_mp=multi_exp_df[(multi_exp_df['_experiment'].str.contains("Voyager1-")) | 
+                       (multi_exp_df['_experiment'].str.contains("AMS02"))].EK_mid.values
+
+    kinetic_binsize=(kinetic[1,:]-kinetic[0,:])/2.0
+    ratio_name='_B'+'_'+'C_ratio'
+    ratio=np.array(multi_exp_df[(multi_exp_df['_experiment'].str.contains("Voyager1-")) | 
+                       (multi_exp_df['_experiment'].str.contains("AMS02"))][ratio_name].values)
+    ratio_sys_errors=np.array(multi_exp_df[(multi_exp_df['_experiment'].str.contains("Voyager1-")) | 
+                       (multi_exp_df['_experiment'].str.contains("AMS02"))]._sys_plus.values)
+    ratio_stat_errors=np.array(multi_exp_df[(multi_exp_df['_experiment'].str.contains("Voyager1-")) | 
+                       (multi_exp_df['_experiment'].str.contains("AMS02"))]._stat_plus.values)
+    ratio_errors=np.sqrt(np.square(ratio_stat_errors)+np.square(ratio_sys_errors))
+    #print(kinetic_mp.shape)
+    #print(ratio.shape)
+    #print(ratio_errors.shape)
+    ams_data_formatted_df = pd.DataFrame(data=np.column_stack((names,kinetic_mp,kinetic_binsize,ratio,ratio_errors)),
+                   columns=column_names)
+    return ams_data_formatted_df
+
+def make_plot_of_B_C_all_data(numerator,denominator,log_show,energy,B_C_ratio_models,L,D):
+    fnt=28
+    df=load_B_C_ratio_all_data()
+    x1=0.9*df.kinetic.min()
+    x2=4*df.kinetic.max()
+    y1=10**-2
+    y2=3*10**-1
+    plt.figure(figsize=(14,10))
+    plt.errorbar(df[df['experiment'].str.contains("Voyager1-")].kinetic.values,
+                 df[df['experiment'].str.contains("Voyager1-")].ratio.values,
+                 xerr=df[df['experiment'].str.contains("Voyager1-")].kinetic_binsize.values,
+                 yerr=df[df['experiment'].str.contains("Voyager1-")].ratio_errors.values,
+                 marker="o",ms=10,linestyle='None',label="Voyager LIS")
+    plt.errorbar(df[(df['experiment'].str.contains("AMS02")) & (df['kinetic']>20)].kinetic.values,
+                 df[(df['experiment'].str.contains("AMS02"))  & (df['kinetic']>20)].ratio.values,
+                 xerr=df[(df['experiment'].str.contains("AMS02"))  & (df['kinetic']>20)].kinetic_binsize.values,
+                 yerr=df[(df['experiment'].str.contains("AMS02"))  & (df['kinetic']>20)].ratio_errors.values,
+                 marker="x",ms=10,linestyle='None',label="AMS-02")
+    plt.plot(energy[0],B_C_ratio_models[0],'--',linewidth=3,label=f'model L={L[0]}, D={D[0]}')
+    plt.plot(energy[1],B_C_ratio_models[1],'-.',linewidth=3,label=f'model L={L[1]}, D={D[1]}')
+    plt.plot(energy[2],B_C_ratio_models[2],'-',linewidth=3,label=f'model L={L[2]}, D={D[2]}')
+    plt.xscale("log")
+    plt.xlabel("Kinetic Energy per nucleon [GeV/n]",fontsize=fnt)
+    plt.xticks(fontsize=fnt-4)
+    ax=plt.gca()
+    ax.tick_params(which='both',width=2, length=7)
+    ax.tick_params(which='minor',width=1.2, length=4)  
+    if log_show==1:
+        plt.yscale("log")
+    plt.ylabel(numerator+"/"+denominator,fontsize=fnt)
+    plt.yticks(fontsize=fnt-4)
+    ax=plt.gca()
+    ax.tick_params(which='both',width=2, length=7)
+    ax.tick_params(which='minor',width=1.2, length=4)  
+    plt.xlim([x1,x2])
+    plt.ylim([y1,y2])
+    plt.legend(loc='upper right', fontsize=fnt-4)
+    #plt.setp(plt.axis.tick_params(axis=both, width=3,length=3))
+    plt.title("Boron Carbon Ratio, data and models", fontsize=fnt)
+    plt.savefig(filepaths.images_path+numerator+"_"+denominator+"_ams_and_voyager_data.png")
+    #don't show on supercomputer
+    #plt.show()
+
+def make_plot_of_Beisotope_data_and_models(numerator,denominator,log_show,energy,be_10_be_9_model_ratio,L,D):
+    fnt=28
+    df=load_Be10_Be9_ratio()
+    x1=df.kinetic.min()-0.01
+    x2=10**2
+    #y1=ratio[0]
+    #y2=5*10**-1
+    plt.figure(figsize=(16,16))
+    exp_names=df.experiment.unique()
+    type_points=['X', 'P', 'p', 'o', '^', '*','<','>','v','h','d','s']
+    markersize_flt=14
+    i=0
+    while i<len(exp_names):
+        if (i<=1) or ((i>6) and i<10):
+            l=exp_names[i]
+            label_string=l[:l.find('(')]
+            #print(label_string)
+            plt.errorbar(df.loc[df.experiment==l,'kinetic'],df.loc[df.experiment==l,'ratio'],
+                xerr=df.loc[df.experiment==l,'kinetic_binsize'],yerr=df.loc[df.experiment==l,'ratio_errors'],
+                         marker=type_points[i],ms=markersize_flt,linestyle='None',label=label_string)
+        elif i>=10:
+            l=exp_names[i]
+            #print(l)
+            label_string=l[:l.find('1')]
+            #print(label_string)
+            plt.errorbar(df.loc[df.experiment==l,'kinetic'],df.loc[df.experiment==l,'ratio'],
+                xerr=df.loc[df.experiment==l,'kinetic_binsize'],yerr=df.loc[df.experiment==l,'ratio_errors'],
+                         marker=type_points[i],ms=markersize_flt,linestyle='None',label=label_string)
+        i+=1
+    plt.plot(energy[0],be_10_be_9_model_ratio[0],'g--',linewidth=3,label=f'model L={L[0]}, D={D[0]}')
+    plt.plot(energy[1],be_10_be_9_model_ratio[1],'r-.',linewidth=3,label=f'model L={L[1]}, D={D[1]}')
+    plt.plot(energy[2],be_10_be_9_model_ratio[2],'m-',linewidth=3,label=f'model L={L[2]}, D={D[2]}')
+    plt.xscale("log")
+    plt.xlabel("Kinetic Energy per nucleon [GeV/n]",fontsize=fnt)
+    plt.xticks(fontsize=fnt-4)
+    ax=plt.gca()
+    ax.tick_params(which='both',width=2, length=7)
+    ax.tick_params(which='minor',width=1.2, length=4)
+    if log_show==1:
+        plt.yscale("log")
+    plt.ylabel(numerator+"/"+denominator,fontsize=fnt)
+    plt.yticks(fontsize=fnt-4)
+    ax=plt.gca()
+    ax.tick_params(which='both',width=2, length=7)
+    ax.tick_params(which='minor',width=1.2, length=4)
+    plt.xlim([x1,x2])
+    #plt.ylim([y1,y2])
+    plt.legend(loc='lower right', fontsize=fnt-8)
+    plt.title("Be-10/Be-9 ratio data and models ", fontsize=fnt)
+    plt.savefig(filepaths.images_path+numerator+"_"+denominator+"_all_data_and_models.png")
+    #don't show on supercomputer
+    #plt.show()
